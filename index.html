@@ -1,21 +1,48 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>My Projects Hub</title>
-  <meta name="description" content="메인 허브에서 여러 프로젝트로 이동">
+  <title>My Interactive Tools</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore interactive tools to improve your daily life. Includes a Happiness Commute Calculator.">
   <style>
-    body { font-family: Arial; text-align:center; margin:50px; }
-    ul { list-style:none; padding:0; }
-    li { margin:20px 0; }
-    a { text-decoration:none; color:#0066cc; font-size:1.2em; }
-    a:hover { color:#ff6600; }
+    body { font-family: Arial, sans-serif; margin: 40px; line-height:1.6; color:#333; background:#f0f2f5; }
+    h1 { font-size:28px; }
+    a { color:#2563eb; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .content { max-width:720px; margin:0 auto; }
+    .card { background:#fff; padding:20px; margin-top:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
-  <h1>My Projects Hub</h1>
-  <ul>
-    <li><a href="./happyCheck/">HappyCheck</a></li>
-  </ul>
+  <div class="content">
+    <h1>Welcome to My Interactive Tools</h1>
+    <p>Explore our interactive web tools designed to help improve your daily life and productivity. Each tool provides insights, tips, and personalized feedback based on your input.</p>
+    
+    <div class="card">
+      <h2>Happiness Commute Calculator</h2>
+      <p>Measure your daily commute satisfaction in minutes. Adjust your commute time, transport mode, workload, and personal free time to see your happiness score and get actionable tips.</p>
+      <p><a href="/happyCheck/">Go to Happiness Calculator →</a></p>
+    </div>
+
+    <div class="card">
+      <h2>Tips for Daily Routine</h2>
+      <p>Consistently reviewing your daily routine can help you identify areas to improve work-life balance, reduce stress, and increase overall satisfaction.</p>
+      <ul>
+        <li>Consider walking or cycling for a more enjoyable commute.</li>
+        <li>Reduce workload where possible and prioritize important tasks.</li>
+        <li>Ensure sufficient personal/free time daily.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>About This Site</h2>
+      <p>This site is hosted on GitHub Pages and designed to provide interactive experiences. Privacy policy is available <a href="privacy.html">here</a>.</p>
+    </div>
+
+    <footer style="margin-top:30px; text-align:center; font-size:12px; color:#666;">
+      © 2025 My Interactive Tools
+    </footer>
+  </div>
 </body>
 </html>
