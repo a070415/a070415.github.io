@@ -1,201 +1,126 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>행복 출퇴근 계산기 — One‑Page Demo</title>
-  <meta name="description" content="출퇴근 행복도 계산기 데모 페이지 — 무료 호스팅, 애드센스(샘플) 삽입용 원페이지 템플릿" />
+  <title>Commute Happiness Calculator</title>
+  <meta name="description" content="Calculate your daily commute happiness score and get tips to improve your routine." />
 
-  <!-- IMPORTANT: Replace ca-pub-XXXXXXXXXXXX with your own AdSense publisher ID after approval -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" data-ad-client="ca-pub-XXXXXXXXXXXX"></script>
+  <!-- IMPORTANT: Replace ca-pub-XXXXXXXXXXXX with your own AdSense publisher ID -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+          data-ad-client="ca-pub-XXXXXXXXXXXX"></script>
 
-  <!-- Fonts & icons (CDN) -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed;--glass: rgba(255,255,255,0.04);} 
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#e6eef8;background:linear-gradient(180deg,#071029 0%, #0f1724 100%);}
-    .wrap{max-width:980px;margin:36px auto;padding:28px}
-    header{display:flex;align-items:center;gap:16px}
-    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
-    h1{margin:0;font-size:20px}
-    p.lead{margin:6px 0 18px;color:var(--muted)}
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed;} 
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:#e6eef8;background:linear-gradient(180deg,#071029 0%, #0f1724 100%);}
+    .wrap{max-width:720px;margin:36px auto;padding:20px}
+    header{text-align:center;margin-bottom:24px}
+    h1{margin:0;font-size:24px}
+    p.lead{margin:6px 0 0;color:var(--muted)}
 
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
-    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
-    @media(max-width:920px){.grid{grid-template-columns:1fr} .logo{width:48px;height:48px}}
-
+    .card{background:rgba(255,255,255,0.04);border-radius:14px;padding:18px;margin-bottom:20px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
     .controls label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
     .controls input[type=range]{width:100%}
     .big-num{font-size:44px;margin:8px 0 0}
     .muted{color:var(--muted);font-size:13px}
+    .btn{padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#2563eb);color:white;border:none;cursor:pointer}
 
-    footer{display:flex;gap:12px;align-items:center;color:var(--muted);font-size:13px}
-    .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#2563eb);color:white;text-decoration:none;font-weight:600}
+.center-text{
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 20px 0;
+}
 
-    /* tiny ad slot container styling */
-    .ad-slot{background:var(--glass);border:1px dashed rgba(255,255,255,0.04);border-radius:10px;padding:12px;text-align:center}
-
-    /* small UI helpers */
-    .row{display:flex;gap:12px;align-items:center}
-    .small{font-size:13px;color:var(--muted)}
-    .cookie{font-size:12px;color:var(--muted);}
+    .ad-slot{text-align:center;margin:20px 0}
+    footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px}
   </style>
 </head>
 <body>
   <main class="wrap">
     <header>
-      <div class="logo">H</div>
-      <div>
-        <h1>출퇴근 행복도 계산기 — 원페이지 템플릿</h1>
-        <p class="lead">무료 호스팅 + 애드센스(자리표시자 포함). 바로 배포 가능한 단일 HTML 파일입니다.</p>
-      </div>
+      <h1>Commute Happiness Calculator</h1>
+      <p class="lead">Calculate your daily happiness score during your commute.</p>
     </header>
 
-    <section class="grid">
-      <div>
-        <div class="card">
-          <h2 style="margin-top:0">사용법</h2>
-          <p class="muted">아래 슬라이더로 매일의 요소(출근시간, 이동수단, 날씨, 사적시간 등)를 입력하면 '행복 점수'가 계산됩니다. 이 영역은 방문자가 오래 머무르게 하는 인터랙티브 콘텐츠 예시입니다.</p>
+    <div class="card">
+      <div class="controls">
+        <label>Commute Time (minutes): <span id="commuteMinsLbl">35</span></label>
+        <input id="commuteMins" type="range" min="0" max="120" value="35">
 
-          <div id="calculator" style="margin-top:12px;">
-            <div class="controls">
-              <label>출근시간(분): <span id="commuteMinsLbl">35</span></label>
-              <input id="commuteMins" type="range" min="0" max="120" value="35">
+        <label>Transport Mode (0=Walk, 1=Public, 2=Car, 3=Bicycle): <span id="transportLbl">1</span></label>
+        <input id="transport" type="range" min="0" max="3" step="1" value="1">
 
-              <label>이동수단(0=도보, 1=대중교통, 2=자가용, 3=자전거): <span id="transportLbl">1</span></label>
-              <input id="transport" type="range" min="0" max="3" step="1" value="1">
+        <label>Workload (0~10): <span id="workloadLbl">5</span></label>
+        <input id="workload" type="range" min="0" max="10" value="5">
 
-              <label>업무강도(0~10): <span id="workloadLbl">5</span></label>
-              <input id="workload" type="range" min="0" max="10" value="5">
+        <label>Free Time (minutes): <span id="freeTimeLbl">90</span></label>
+        <input id="freeTime" type="range" min="0" max="300" value="90">
 
-              <label>개인시간(분): <span id="freeTimeLbl">90</span></label>
-              <input id="freeTime" type="range" min="0" max="300" value="90">
-
-              <div style="margin-top:10px" class="row">
-                <button id="calcBtn" class="btn">점수 계산</button>
-                <button id="randomBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06)">무작위 테스트</button>
-              </div>
-
-              <div style="margin-top:12px">
-                <div class="muted">예상 행복점수</div>
-                <div class="big-num" id="score">71</div>
-                <div class="small" id="advice">중간 수준: 퇴근 후 개인시간을 조금 더 늘려보세요.</div>
-              </div>
-            </div>
-          </div>
+        <div style="margin-top:10px">
+          <button id="calcBtn" class="btn">Calculate Score</button>
+          <button id="randomBtn" class="btn" style="background:#444">Random Test</button>
         </div>
 
-        <div class="card">
-          <h3 style="margin-top:0">데이터 없이 이메일 수집 (간단)</h3>
-          <p class="muted">백엔드 없이 Formspree 같은 서비스를 연결해 이메일 구독을 받을 수 있습니다. 예시 폼(아래)을 Formspree endpoint로 바꾸면 동작합니다.</p>
-          <form id="leadForm" action="https://formspree.io/f/your-form-id" method="POST">
-            <input name="email" type="email" placeholder="이메일 주소" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);width:100%;margin-bottom:8px">
-            <button class="btn" type="submit">구독하기</button>
-          </form>
+        <div style="margin-top:12px">
+          <div class="muted">Estimated Happiness Score</div>
+          <div class="big-num" id="score">71</div>
+          <div class="muted" id="advice">Medium: Consider increasing your free time after commute.</div>
         </div>
-
-        <div class="card">
-          <h3 style="margin-top:0">간단한 SEO / PWA 준비</h3>
-          <ul class="muted" style="padding-left:18px;margin:6px 0 0">
-            <li>meta description, og 태그 추가</li>
-            <li>manifest.json + service worker로 오프라인 기본 지원</li>
-            <li>robots.txt, privacy policy 페이지 추가</li>
-          </ul>
-        </div>
-
       </div>
+    </div>
 
-      <aside>
-        <div class="card ad-slot">
-          <div class="small">여기는 애드센스 데모 슬롯입니다.</div>
+    <p class="center-text">Get insights and tips to improve your daily routine.</p>
 
-          <!-- Example responsive ad slot (replace data-ad-client with yours and add data-ad-slot if needed) -->
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-XXXXXXXXXXXX"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    <!-- AdSense Slot -->
+    <div class="ad-slot">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXX"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
 
-          <div class="small" style="margin-top:8px">참고: 실제 승인을 받은 발행자 ID로 교체하세요.</div>
-        </div>
-
-        <div class="card">
-          <h4 style="margin-top:0">호스팅 (무료)</h4>
-          <ul class="muted" style="padding-left:18px;margin:6px 0 0">
-            <li>GitHub Pages — 정적 사이트에 최적</li>
-            <li>Cloudflare Pages — 배포와 CDN 빠름</li>
-            <li>Vercel — 자동 배포, 프론트엔드 친화적</li>
-          </ul>
-          <div style="margin-top:10px" class="small">도메인을 직접 연결하려면 DNS에서 CNAME/ALIAS 설정 필요 — 애드센스 심사에선 도메인 소유가 중요합니다.</div>
-        </div>
-
-        <div class="card">
-          <h4 style="margin-top:0">무료 툴</h4>
-          <ul class="muted" style="padding-left:18px;margin:6px 0 0">
-            <li>에디터: VS Code</li>
-            <li>이미지: Unsplash</li>
-            <li>아이콘: Font Awesome CDN</li>
-            <li>폼: Formspree / Getform</li>
-          </ul>
-        </div>
-
-        <div class="card cookie">
-          <strong>광고 + 개인정보</strong>
-          <div class="small" style="margin-top:6px">애드센스 사용 시 이용 약관 및 개인정보처리방침(쿠키/광고 네트워크 고지)을 반드시 준비하세요.</div>
-        </div>
-
-      </aside>
-    </section>
-
-    <footer style="margin-top:18px">
-      <div class="muted">템플릿 제공 — 무료</div>
-      <div style="flex:1"></div>
-      <a class="small" href="#" id="showCode">HTML 코드 보기</a>
+    <footer>
+      © 2025 Commute Happiness Calculator
     </footer>
   </main>
 
   <script>
-    // UI wiring for the happiness calculator
     const commute = document.getElementById('commuteMins');
     const transport = document.getElementById('transport');
     const workload = document.getElementById('workload');
     const freeTime = document.getElementById('freeTime');
     const scoreEl = document.getElementById('score');
     const advice = document.getElementById('advice');
-
     const commuteLbl = document.getElementById('commuteMinsLbl');
     const transportLbl = document.getElementById('transportLbl');
     const workloadLbl = document.getElementById('workloadLbl');
     const freeTimeLbl = document.getElementById('freeTimeLbl');
 
     function calcScore(){
-      const c = Number(commute.value); // minutes
-      const t = Number(transport.value); // 0..3
-      const w = Number(workload.value); // 0..10
-      const f = Number(freeTime.value); // minutes
+      const c = Number(commute.value);
+      const t = Number(transport.value);
+      const w = Number(workload.value);
+      const f = Number(freeTime.value);
 
-      // simple scoring rules (tunable)
-      // base 50
       let s = 50;
-      // commute penalty
       s -= Math.min(30, Math.round((c - 15) / 2));
-      // transport: better score for active/pleasant transport
       s += (t === 0 ? 6 : t === 3 ? 6 : t === 1 ? 0 : -2);
-      // workload penalty
       s -= Math.round(w * 2);
-      // free time bonus
       s += Math.min(20, Math.round((f - 30) / 13));
-
-      // clamp
       s = Math.max(5, Math.min(95, s));
 
       scoreEl.textContent = s;
-      if(s >= 80) advice.textContent = '매우 만족: 현재 루틴을 유지하되 작은 즐거움을 더해보세요.';
-      else if(s >= 60) advice.textContent = '괜찮음: 퇴근 후 개인 시간을 조금 늘려보면 점수가 오릅니다.';
-      else if(s >= 40) advice.textContent = '주의: 출퇴근 시간을 줄이거나 업무 강도를 낮춰보세요.';
-      else advice.textContent = '경고: 생활 패턴을 재설계하는 것이 필요해 보입니다.';
+      if(s >= 80) advice.textContent = 'Excellent: Maintain your current routine.';
+      else if(s >= 60) advice.textContent = 'Good: Consider increasing your free time after commute.';
+      else if(s >= 40) advice.textContent = 'Caution: Reduce commute time or workload.';
+      else advice.textContent = 'Warning: Consider redesigning your daily routine.';
     }
 
     [commute,transport,workload,freeTime].forEach(el=>el.addEventListener('input', ()=>{
@@ -218,16 +143,7 @@
       calcScore();
     });
 
-    // initial calc
     calcScore();
-
-    // show source code (opens in new tab using data URL) — convenience for users
-    document.getElementById('showCode').addEventListener('click', (e)=>{
-      e.preventDefault();
-      const html = '<!doctype html>\n' + document.documentElement.outerHTML;
-      const url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
-      window.open(url, '_blank');
-    });
   </script>
 </body>
 </html>
