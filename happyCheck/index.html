@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Commute Happiness Calculator</title>
-  <meta name="description" content="Calculate your daily commute happiness score and get tips to improve your routine." />
+  <meta name="description" content="Calculate your daily commute happiness score and get insights to improve your work-life balance and daily routine." />
 
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2604303771066079"
@@ -44,7 +44,7 @@
   <main class="wrap">
     <header>
       <h1>Commute Happiness Calculator</h1>
-      <p class="lead">Use this tool to check your daily commute satisfaction.</p>
+      <p class="lead">Use this tool to evaluate your daily commute satisfaction and find practical ways to improve your daily routine.</p>
     </header>
 
     <div class="card">
@@ -74,9 +74,16 @@
       </div>
 
       <h2>How to Use</h2>
-      <p>This calculator helps you evaluate your daily commute satisfaction in minutes. Adjust the sliders to represent your commuting time, transport mode, workload, and personal free time, then click “Calculate Score”.</p>
-      <p>Use this tool daily to understand how your commuting habits affect your overall happiness and productivity.</p>
-      <p>Tips: Try walking or cycling to increase satisfaction. Reduce workload when possible. Increase personal time for better balance.</p>
+      <p>This calculator helps you measure how your commute time, work intensity, and free time impact your overall happiness level. Adjust each slider to reflect your actual daily routine, then click “Calculate Score.” The result gives a numerical score representing your estimated commute satisfaction and lifestyle balance.</p>
+
+      <p>The goal is to visualize how small lifestyle changes can lead to better emotional well-being. Even slight adjustments—like cutting down your commute by ten minutes, walking instead of driving once a week, or scheduling daily free time—can significantly boost happiness and productivity. This simple model encourages reflection on how you spend your time every day.</p>
+
+      <h2>Tips for Improving Your Score</h2>
+      <p>If your score is low, start by observing which factor influences it most. Long commutes often lead to fatigue and frustration, while low free time can cause stress and imbalance. Try optimizing your commute hours or incorporating flexible work options when possible. If your workload is consistently high, remember that taking short breaks can restore focus and creativity.</p>
+
+      <p>Physical activity and sunlight exposure are strongly linked to mental well-being. If walking or cycling is feasible, consider trying it a few times per week. On public transport, turn your travel into quiet time—listen to music, audiobooks, or simply rest your mind. The key idea is not to eliminate stress completely but to design a daily rhythm that feels sustainable and enjoyable.</p>
+
+      <p>By tracking your score regularly, you’ll begin to recognize patterns that affect your happiness. Over time, this awareness can lead to long-term improvements in work-life balance, health, and emotional stability.</p>
     </div>
 
     <!-- AdSense Slot -->
@@ -120,10 +127,10 @@
       s = Math.max(5, Math.min(95, s));
 
       scoreEl.textContent = s;
-      if(s >= 80) advice.textContent = 'Excellent: Maintain your current routine.';
-      else if(s >= 60) advice.textContent = 'Good: Consider increasing your free time after commute.';
-      else if(s >= 40) advice.textContent = 'Caution: Reduce commute time or workload.';
-      else advice.textContent = 'Warning: Consider redesigning your daily routine.';
+      if(s >= 80) advice.textContent = 'Excellent: You have a well-balanced routine with great time management. Keep maintaining your current lifestyle—your commute and workload seem to support both your happiness and productivity.';
+      else if(s >= 60) advice.textContent = 'Good: You seem fairly satisfied, but there’s still room for improvement. Try to schedule more personal or relaxation time after work to boost your daily mood and reduce fatigue.';
+      else if(s >= 40) advice.textContent = 'Caution: Your commute or workload may be reducing your overall happiness. Look for small ways to shorten your commute, reduce stress, or add breaks throughout the day.';
+      else advice.textContent = 'Warning: Your daily balance appears heavily strained. Long commutes, heavy workloads, or lack of rest might be seriously impacting your well-being. Consider redesigning your daily routine to regain energy and satisfaction.';
     }
 
     [commute,transport,workload,freeTime].forEach(el=>el.addEventListener('input', ()=>{
