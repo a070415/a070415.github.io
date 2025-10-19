@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sleep Debt Recovery Calculator</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#6ee7b7; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
+      --radius:16px; --gap:16px; font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071024 0%, #07172b 100%);color:#e6eef8}
+    .wrap{max-width:980px;margin:48px auto;padding:24px;}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--radius);padding:20px;box-shadow:0 6px 30px rgba(2,6,23,0.7);}
+    header{display:flex;gap:12px;align-items:center;}
+    header h1{margin:0;font-size:20px}
+    header p{margin:0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:20px;margin-top:18px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+
+    .controls{background:var(--glass);padding:12px;border-radius:12px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=number], select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    .days-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
+    .day{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px}
+    .day b{display:block}
+    .row{display:flex;gap:8px;align-items:center}
+
+    button{background:linear-gradient(90deg,var(--accent),#3dd7af);border:none;padding:10px 14px;border-radius:10px;color:#042024;font-weight:600;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:500}
+
+    .result{padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));}
+    .big{font-size:28px;margin:6px 0}
+    .muted{color:var(--muted);font-size:13px}
+
+    .bars{margin-top:12px}
+    .bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .bar .label{width:90px;font-size:13px;color:var(--muted)}
+    .bar .track{flex:1;height:12px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
+    .bar .fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#34d399,#06b6d4)}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div>
+          <h1>Sleep Debt Recovery Calculator</h1>
+          <p>Estimate your weekly sleep debt and simulate how much extra sleep you need to recover.</p>
+        </div>
+      </header>
+
+      <div class="grid">
+        <div>
+          <div class="controls">
+            <label for="target">Target sleep per night (hours)</label>
+            <input id="target" type="number" step="0.25" min="3" max="12" value="8"> 
+
+            <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+              <div style="flex:1">
+                <label for="recoveryDays">Recovery period (days)</label>
+                <input id="recoveryDays" type="number" min="1" max="30" value="7">
+              </div>
+              <div style="width:140px">
+                <label for="round">Round to</label>
+                <select id="round">
+                  <option value="0.25">0.25 hour</option>
+                  <option value="0.1">0.1 hour</option>
+                  <option value="0.5">0.5 hour</option>
+                  <option value="1">1 hour</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label>Actual sleep this week (hours per day)</label>
+              <div class="days-list" id="days"></div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button id="calc">Calculate</button>
+              <button class="secondary" id="reset">Reset</button>
+            </div>
+          </div>
+
+          <div class="result" style="margin-top:12px" id="resultBox">
+            <div class="muted">Result</div>
+            <div id="resultContent">
+              <div class="big">No calculation yet.</div>
+            </div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="result">
+            <div class="muted">Summary</div>
+            <div id="summary" style="margin-top:8px">
+              <div class="big">—</div>
+              <div class="muted">Target total: <span id="summaryTarget">—</span> / Actual total: <span id="summaryActual">—</span></div>
+              <div class="bars" id="bars"></div>
+            </div>
+            <footer>
+              Tip: Instead of trying to catch up all at once, recover gradually over several days for healthier sleep.
+            </footer>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const daysEl = document.getElementById('days');
+    const roundSel = document.getElementById('round');
+
+    function createDayInputs(){
+      daysEl.innerHTML = '';
+      for(let i=0;i<7;i++){
+        const div = document.createElement('div'); div.className='day';
+        div.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>${days[i]}</b></div>
+          <div class="row"><input type="number" step="0.25" min="0" max="24" value="8" data-day="${i}" class="sleepInput"/></div>
+        `;
+        daysEl.appendChild(div);
+      }
+    }
+    createDayInputs();
+
+    function roundTo(x, step){
+      const n = Number(step);
+      return Math.round(x / n) * n;
+    }
+
+    document.getElementById('calc').addEventListener('click', ()=>{
+      const target = parseFloat(document.getElementById('target').value) || 8;
+      const recoveryDays = parseInt(document.getElementById('recoveryDays').value) || 7;
+      const step = parseFloat(roundSel.value) || 0.25;
+      const inputs = Array.from(document.querySelectorAll('.sleepInput')).map(i=>parseFloat(i.value)||0);
+
+      const totalTarget = target * 7;
+      const totalActual = inputs.reduce((a,b)=>a+b,0);
+      const debtRaw = totalTarget - totalActual;
+      const debt = debtRaw > 0 ? debtRaw : 0;
+
+      const extraPerNightRaw = debt / Math.max(1, recoveryDays);
+      const extraPerNight = roundTo(extraPerNightRaw, step);
+
+      const rc = document.getElementById('resultContent');
+      rc.innerHTML = '';
+
+      const h = document.createElement('div'); h.className='big';
+      if(debt <= 0){
+        h.textContent = 'No sleep debt — you’re well-rested! ✅';
+      } else {
+        h.textContent = `You have a sleep debt of ${debt.toFixed(2)} hours.`;
+      }
+      rc.appendChild(h);
+
+      const p = document.createElement('div'); p.className='muted';
+      if(debt <= 0){
+        p.textContent = `Your total sleep exceeds or meets the target of ${target} hours per night.`;
+      } else {
+        p.innerHTML = `Recovery plan: Over <strong>${recoveryDays}</strong> days, aim for an extra <strong>${extraPerNight}</strong> hours of sleep per night.`;
+      }
+      rc.appendChild(p);
+
+      if(debt > 0){
+        const suggestion = document.createElement('div'); suggestion.style.marginTop='10px'; suggestion.className='muted';
+        const heavier = Math.min(3, recoveryDays);
+        const heavyPerNight = roundTo(Math.min(extraPerNight*1.4, debt), step);
+        suggestion.innerHTML = `Suggestion: For the first ${heavier} nights, add about <strong>${heavyPerNight}h</strong> sleep, then average <strong>${extraPerNight}h</strong> for the remaining nights.`;
+        rc.appendChild(suggestion);
+
+        const note = document.createElement('div'); note.className='muted'; note.style.marginTop='8px';
+        note.innerHTML = 'Note: Adding more than 1.5–2 hours per night is not recommended, as it may disrupt your natural rhythm.';
+        rc.appendChild(note);
+      }
+
+      document.getElementById('summaryTarget').textContent = totalTarget.toFixed(2)+'h';
+      document.getElementById('summaryActual').textContent = totalActual.toFixed(2)+'h';
+
+      const barsEl = document.getElementById('bars'); barsEl.innerHTML = '';
+      for(let i=0;i<7;i++){
+        const val = inputs[i];
+        const percent = Math.min(100, (val / target) * 100);
+        const row = document.createElement('div'); row.className='bar';
+        row.innerHTML = `<div class="label">${days[i]}</div>
+          <div class="track"><div class="fill" style="width:${percent}%"></div></div>
+          <div style="width:40px;text-align:right;font-size:13px">${val.toFixed(2)}h</div>`;
+        barsEl.appendChild(row);
+      }
+    });
+
+    document.getElementById('reset').addEventListener('click', ()=>{
+      document.getElementById('target').value = 8;
+      document.getElementById('recoveryDays').value = 7;
+      document.getElementById('round').value = '0.25';
+      document.querySelectorAll('.sleepInput').forEach(i=>i.value=8);
+      document.getElementById('resultContent').innerHTML = '<div class="big">No calculation yet.</div>';
+      document.getElementById('summaryTarget').textContent = '—';
+      document.getElementById('summaryActual').textContent = '—';
+      document.getElementById('bars').innerHTML = '';
+    });
+  </script>
+</body>
+</html>
