@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fitness Lifespan Simulator</title>
+  <meta name="description" content="Estimate fitness level and projected stamina over time based on age, exercise habits, and lifestyle." />
+  <style>
+    :root{
+      --bg: #fffaf6;
+      --card: linear-gradient(180deg,#ffffff,#fff7f0);
+      --accent1: #ff7aa2; /* pink */
+      --accent2: #6ee7b7; /* mint */
+      --accent3: #60a5fa; /* sky */
+      --muted: #6b7280;
+      --glass: rgba(255,255,255,0.6);
+      --radius:14px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#fffaf6, #f0fcff);color:#0f1724}
+    .wrap{max-width:980px;margin:36px auto;padding:20px}
+    .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:0 8px 30px rgba(15,23,36,0.08)}
+    header{display:flex;align-items:center;gap:12px}
+    header h1{margin:0;font-size:20px}
+    header p{margin:0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:18px;margin-top:16px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    .controls{background:rgba(255,255,255,0.7);padding:12px;border-radius:12px;border:1px solid rgba(15,23,36,0.04)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=number], select, input[type=range]{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(15,23,36,0.06);background:transparent;color:inherit}
+    .row{display:flex;gap:8px;align-items:center}
+    .cols{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,var(--accent1),var(--accent3));color:white;font-weight:600}
+    button{background:linear-gradient(90deg,var(--accent2),var(--accent3));border:none;padding:10px 14px;border-radius:10px;color:#05323a;font-weight:700;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(15,23,36,0.06);color:var(--muted);font-weight:600}
+
+    .result{padding:14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.95));border:1px solid rgba(15,23,36,0.03)}
+    .score{font-size:40px;font-weight:800;margin:6px 0;color:var(--accent1)}
+    .muted{color:var(--muted);font-size:13px}
+
+    .chart{margin-top:10px;background:linear-gradient(90deg,rgba(96,165,250,0.06),rgba(110,231,183,0.03));padding:10px;border-radius:10px}
+    .line{height:6px;background:linear-gradient(90deg,var(--accent3),var(--accent2));border-radius:6px}
+
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+
+    .small{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div>
+          <h1>Fitness Lifespan Simulator</h1>
+          <p>Input your age, exercise habits, and lifestyle to estimate current fitness and projected stamina over time.</p>
+        </div>
+        <div style="margin-left:auto" class="pill">Quick Simulation</div>
+      </header>
+
+      <div class="grid">
+        <main>
+          <div class="controls">
+            <div class="cols">
+              <div>
+                <label for="age">Age</label>
+                <input id="age" type="number" min="12" max="100" value="30" />
+              </div>
+              <div>
+                <label for="gender">Gender (optional)</label>
+                <select id="gender">
+                  <option value="other">Prefer not to say</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top:10px">
+              <label for="exerciseDays">Exercise frequency (days/week)</label>
+              <input id="exerciseDays" type="number" min="0" max="7" value="3" />
+            </div>
+
+            <div style="margin-top:10px" class="cols">
+              <div>
+                <label for="minutes">Avg exercise minutes per session</label>
+                <input id="minutes" type="number" min="0" max="300" value="45" />
+              </div>
+              <div>
+                <label for="intensity">Intensity (1 low — 5 high)</label>
+                <input id="intensity" type="number" min="1" max="5" value="3" />
+              </div>
+            </div>
+
+            <hr style="margin:12px 0;border:none;border-top:1px solid rgba(15,23,36,0.04)" />
+
+            <div class="cols">
+              <div>
+                <label for="sleep">Avg sleep per night (hours)</label>
+                <input id="sleep" type="number" min="0" max="14" step="0.25" value="7.5" />
+              </div>
+              <div>
+                <label for="diet">Diet quality (1 poor — 5 excellent)</label>
+                <input id="diet" type="number" min="1" max="5" value="3" />
+              </div>
+            </div>
+
+            <div style="margin-top:10px" class="cols">
+              <div>
+                <label for="alcohol">Alcohol units/week</label>
+                <input id="alcohol" type="number" min="0" max="100" value="3" />
+              </div>
+              <div>
+                <label for="smoke">Smoking (cigarettes/day)</label>
+                <input id="smoke" type="number" min="0" max="60" value="0" />
+              </div>
+            </div>
+
+            <div style="margin-top:10px">
+              <label for="stress">Stress level (1 low — 5 high)</label>
+              <input id="stress" type="number" min="1" max="5" value="2" />
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button id="simulate">Simulate</button>
+              <button class="secondary" id="reset">Reset</button>
+            </div>
+
+            <div style="margin-top:10px" class="small">Note: This simulator provides an estimate for educational purposes and is not medical advice.</div>
+          </div>
+
+          <div id="output" class="result" style="margin-top:12px">
+            <div class="muted">Results</div>
+            <div id="scoreBox">
+              <div class="score">—</div>
+              <div class="muted">Estimated fitness score (0–100)</div>
+            </div>
+            <div id="projection" style="margin-top:12px"></div>
+          </div>
+        </main>
+
+        <aside>
+          <div class="result">
+            <div class="muted">Snapshot</div>
+            <div id="snapshot" style="margin-top:8px">
+              <div class="muted">Current age: <strong id="snapAge">—</strong></div>
+              <div class="muted">Weekly exercise: <strong id="snapWeekly">—</strong> minutes</div>
+              <div class="muted">Lifestyle risk: <strong id="snapRisk">—</strong></div>
+            </div>
+
+            <div class="chart" id="chartBox">
+              <div class="muted">Projected stamina (next 30 years)</div>
+              <div id="chartLines" style="margin-top:8px">
+                <!-- bars added by JS -->
+              </div>
+            </div>
+
+            <footer>
+              <div class="muted">Tip: Regular moderate exercise, good sleep, and a healthy diet strongly improve long-term stamina.</div>
+            </footer>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+    function computeFitness(inputs){
+      // Simple heuristic model (not medical). Combine factors into 0..100 score.
+      const ageFactor = clamp(100 - (inputs.age - 20) * 0.6, 30, 100); // natural decline
+      const exerciseMinutesWeekly = inputs.exerciseDays * inputs.minutes;
+      const exerciseFactor = clamp(Math.log10(1 + exerciseMinutesWeekly) * 18 + inputs.intensity * 4, 0, 40);
+      const sleepFactor = clamp((inputs.sleep / 8) * 12, 0, 12);
+      const dietFactor = (inputs.diet - 1) / 4 * 10; // 0..10
+      const alcoholPenalty = clamp(inputs.alcohol / 14 * 6, 0, 10);
+      const smokePenalty = clamp(inputs.smoke / 20 * 12, 0, 20);
+      const stressPenalty = (inputs.stress -1)/4 * 8;
+
+      let base = ageFactor + exerciseFactor + sleepFactor + dietFactor;
+      let penalties = alcoholPenalty + smokePenalty + stressPenalty;
+      let score = clamp(base - penalties, 0, 100);
+      return {score: Math.round(score), details: {ageFactor, exerciseFactor, sleepFactor, dietFactor, penalties}};
+    }
+
+    function projectStamina(currentScore, inputs){
+      // Project over next 30 years with simple decay + behavior modifier
+      const years = 30;
+      const arr = [];
+      // behaviour multiplier: improvement if exercise high & good lifestyle
+      const behaviour = 1 + ((inputs.exerciseDays >=3 && inputs.minutes>=30 && inputs.diet>=3 && inputs.sleep>=7) ? 0.02 : -0.01);
+      for(let y=0;y<=years;y++){
+        // decline by small percentage each year based on age and behaviour
+        const decay = 0.8 + (y/years)*0.2; // increases slightly over time
+        let val = currentScore * Math.pow(0.995 * decay, y) * behaviour;
+        val = clamp(val, 0, 100);
+        arr.push({year: y, value: Math.round(val)});
+      }
+      return arr;
+    }
+
+    function renderChart(arr){
+      const box = document.getElementById('chartLines'); box.innerHTML = '';
+      const max = Math.max(...arr.map(a=>a.value), 50);
+      arr.forEach((a,i)=>{
+        const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='8px'; row.style.marginBottom='6px';
+        const label = document.createElement('div'); label.style.width='36px'; label.style.fontSize='12px'; label.style.color='var(--muted)'; label.textContent = '+'+a.year;
+        const track = document.createElement('div'); track.style.flex='1'; track.style.height='10px'; track.style.background='rgba(15,23,36,0.04)'; track.style.borderRadius='8px'; track.style.overflow='hidden';
+        const fill = document.createElement('div'); fill.style.height='100%'; fill.style.width = (a.value / max * 100) + '%'; fill.style.background = 'linear-gradient(90deg,var(--accent3),var(--accent2))';
+        const val = document.createElement('div'); val.style.width='36px'; val.style.fontSize='12px'; val.style.textAlign='right'; val.textContent = a.value + '%';
+        track.appendChild(fill);
+        row.appendChild(label); row.appendChild(track); row.appendChild(val);
+        box.appendChild(row);
+      });
+    }
+
+    document.getElementById('simulate').addEventListener('click', ()=>{
+      const inputs = {
+        age: parseInt(document.getElementById('age').value) || 30,
+        exerciseDays: parseFloat(document.getElementById('exerciseDays').value) || 0,
+        minutes: parseFloat(document.getElementById('minutes').value) || 0,
+        intensity: parseFloat(document.getElementById('intensity').value) || 1,
+        sleep: parseFloat(document.getElementById('sleep').value) || 7,
+        diet: parseInt(document.getElementById('diet').value) || 3,
+        alcohol: parseFloat(document.getElementById('alcohol').value) || 0,
+        smoke: parseFloat(document.getElementById('smoke').value) || 0,
+        stress: parseInt(document.getElementById('stress').value) || 2
+      };
+
+      const result = computeFitness(inputs);
+      document.querySelector('.score').textContent = result.score + '/100';
+
+      // snapshot
+      document.getElementById('snapAge').textContent = inputs.age + ' yrs';
+      document.getElementById('snapWeekly').textContent = (inputs.exerciseDays * inputs.minutes) + ' min';
+      const risk = Math.round((result.details.penalties / 40) * 100);
+      document.getElementById('snapRisk').textContent = risk + '%';
+
+      const proj = projectStamina(result.score, inputs);
+      renderChart(proj.slice(0,16)); // show first 15 years for compactness
+
+      // textual projection
+      const projEl = document.getElementById('projection'); projEl.innerHTML = '';
+      const cur = document.createElement('div'); cur.className='muted'; cur.innerHTML = `Current estimated fitness: <strong>${result.score}/100</strong>`;
+      projEl.appendChild(cur);
+
+      const next10 = proj[10] ? proj[10].value : proj[proj.length-1].value;
+      const trend = next10 >= result.score ? 'stable or improving' : 'gradual decline';
+      const t = document.createElement('div'); t.style.marginTop='8px'; t.className='muted';
+      t.innerHTML = `Projection (10 years): <strong>${next10}%</strong> — ${trend}.`;
+      projEl.appendChild(t);
+
+      const advice = document.createElement('div'); advice.style.marginTop='8px'; advice.className='muted';
+      advice.innerHTML = `Recommendations: ${result.score < 60 ? 'Focus on increasing weekly exercise and improving sleep & diet.' : 'Maintain habits; target small improvements in intensity and sleep.'}`;
+      projEl.appendChild(advice);
+    });
+
+    document.getElementById('reset').addEventListener('click', ()=>{
+      document.getElementById('age').value = 30;
+      document.getElementById('gender').value = 'other';
+      document.getElementById('exerciseDays').value = 3;
+      document.getElementById('minutes').value = 45;
+      document.getElementById('intensity').value = 3;
+      document.getElementById('sleep').value = 7.5;
+      document.getElementById('diet').value = 3;
+      document.getElementById('alcohol').value = 3;
+      document.getElementById('smoke').value = 0;
+      document.getElementById('stress').value = 2;
+      document.querySelector('.score').textContent = '—';
+      document.getElementById('projection').innerHTML = '';
+      document.getElementById('chartLines').innerHTML = '';
+      document.getElementById('snapAge').textContent = '—';
+      document.getElementById('snapWeekly').textContent = '—';
+      document.getElementById('snapRisk').textContent = '—';
+    });
+  </script>
+</body>
+</html>
