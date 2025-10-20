@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily Water Hydration Tracker</title>
+  <meta name="description" content="Track your daily water intake based on your weight, activity level, and climate. Interactive calculator to help reach hydration goals." />
+  <style>
+    :root{
+      --bg: #f0fbff;
+      --card: #ffffff;
+      --muted: #5b6b78;
+      --accent1: #5fc3ff; /* sky blue */
+      --accent2: #63e1ff;
+      --accent3: #bfefff;
+      --accent-dark: #0b6b8a;
+      --radius: 14px;
+      --shadow: 0 8px 30px rgba(9,60,80,0.06);
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;padding:28px;background:linear-gradient(180deg,#f7fdff 0%, #eefbff 60%);color:#062a35}
+    .app{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:20px}
+    header{grid-column:1/-1;display:flex;gap:16px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:#023544;font-weight:800;font-size:20px;box-shadow:var(--shadow)}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:4px 0 0;color:var(--muted)}
+
+    .card{background:var(--card);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text], input[type=number], select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    button{padding:10px 12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn-primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+    .progress{height:18px;background:var(--accent3);border-radius:12px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent1));width:0%}
+
+    .log-list{max-height:260px;overflow:auto;margin-top:8px}
+    .log-item{display:flex;justify-content:space-between;padding:8px;border-radius:8px;margin-bottom:6px;background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(245,255,255,0.9));}
+
+    canvas{width:100%;height:180px;border-radius:10px;background:transparent}
+
+    footer{grid-column:1/-1;margin-top:10px;color:var(--muted);font-size:13px}
+
+    @media (max-width:980px){.app{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">H2O</div>
+      <div>
+        <h1>Daily Water Hydration Tracker</h1>
+        <p class="lead">Track your daily water intake based on weight, activity, and climate. Reach your hydration goals with an easy log and visual progress.</p>
+      </div>
+    </header>
+
+    <main class="card">
+      <section aria-labelledby="inputs">
+        <h2 id="inputs">Your profile & settings</h2>
+        <div class="grid">
+          <div>
+            <label>Weight</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="weight" type="number" min="20" max="300" value="70" />
+              <select id="weight-unit" style="min-width:90px"><option value="kg">kg</option><option value="lb">lb</option></select>
+            </div>
+          </div>
+
+          <div>
+            <label>Activity level</label>
+            <select id="activity">
+              <option value="sedentary">Sedentary (little/no exercise)</option>
+              <option value="light">Light (light exercise 1–3 days/wk)</option>
+              <option value="moderate" selected>Moderate (exercise 3–5 days/wk)</option>
+              <option value="active">Active (intense exercise 6–7 days/wk)</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Climate</label>
+            <select id="climate">
+              <option value="temperate">Temperate</option>
+              <option value="hot">Hot / Humid</option>
+              <option value="cold">Cold / Dry</option>
+              <option value="high-altitude">High altitude</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Daily goal adjustment</label>
+            <select id="adjustment">
+              <option value="standard">Standard recommendation</option>
+              <option value="athlete">Athlete (increase)</option>
+              <option value="medical">Medical (consult doctor)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button id="calc-goal" class="btn-primary">Calculate daily goal</button>
+          <button id="reset-profile" class="btn-ghost">Reset</button>
+        </div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Quick log</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="glass-size" type="number" min="50" value="250" />
+          <select id="glass-unit" style="min-width:80px"><option value="ml">ml</option><option value="oz">oz</option></select>
+          <button id="add-glass" class="btn-primary">Add glass</button>
+          <button id="undo" class="btn-ghost">Undo</button>
+        </div>
+        <div style="margin-top:8px;font-size:13px;color:var(--muted)">Tip: Common glass sizes: 250ml, 350ml. 1 fl oz = 29.57 ml.</div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Daily summary</h3>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div class="progress"><i id="progress-bar"></i></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px"><div class="muted">0</div><div class="muted" id="goal-label">Goal</div></div>
+          </div>
+          <div style="min-width:140px;text-align:right">
+            <div style="font-weight:800;font-size:18px" id="today-total">—</div>
+            <div class="muted">of <span id="today-goal">—</span></div>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:10px">
+          <button id="export-csv" class="btn-primary">Export CSV</button>
+          <button id="clear-log" class="btn-ghost">Clear today's log</button>
+        </div>
+
+        <div class="log-list" id="log-list"></div>
+      </section>
+
+    </main>
+
+    <aside class="card">
+      <section>
+        <h3>Goal calculation</h3>
+        <div class="muted">Recommendation method: base ml per kg + activity & climate adjustments.</div>
+        <div style="margin-top:10px">
+          <div style="font-weight:800;font-size:20px" id="goal-ml">— ml</div>
+          <div class="muted" id="goal-note">—</div>
+        </div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Hydration chart</h3>
+        <canvas id="chart" width="400" height="180"></canvas>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Helpful tips</h3>
+        <ul style="color:var(--muted);margin:6px 0 0 18px">
+          <li>Drink regularly — small sips every 20–30 minutes work well.</li>
+          <li>Eat water-rich foods (fruit, soups) to boost hydration.</li>
+          <li>Increase intake in hot weather and during exercise.</li>
+        </ul>
+      </section>
+    </aside>
+
+    <footer>Sky-blue theme — copy this single HTML file to your site or GitHub to run as a standalone hydration tracker.</footer>
+  </div>
+
+  <script>
+    // State
+    let log = []; // {id, ml, timestamp}
+    let lastAction = null;
+
+    // Helpers
+    const $ = id => document.getElementById(id);
+    function uid(){return Math.random().toString(36).slice(2,9)}
+    function now(){return new Date()}
+
+    function mlFromInput(value, unit){
+      const v = parseFloat(value) || 0;
+      if(unit==='ml') return v;
+      // oz to ml
+      return v * 29.5735;
+    }
+
+    function formatMl(n){return Math.round(n) + ' ml'}
+    function formatOz(n){return (n/29.5735).toFixed(2) + ' oz'}
+
+    // Goal calculation formula
+    function calculateGoal(){
+      let weight = parseFloat($('weight').value) || 70;
+      const unit = $('weight-unit').value;
+      if(unit === 'lb') weight = weight * 0.453592; // to kg
+
+      // base: 35 ml per kg (common heuristic: 30-40). We'll use 35.
+      let baseMl = weight * 35; // ml
+
+      // activity multiplier
+      const activity = $('activity').value;
+      let activityAdd = 0;
+      if(activity==='light') activityAdd = 300;
+      if(activity==='moderate') activityAdd = 600;
+      if(activity==='active') activityAdd = 1000;
+
+      // climate adjustment
+      const climate = $('climate').value;
+      let climateAdd = 0;
+      if(climate==='hot') climateAdd = 500;
+      if(climate==='high-altitude') climateAdd = 400;
+      if(climate==='cold') climateAdd = -100;
+
+      // adjustment preset
+      const adj = $('adjustment').value;
+      let adjMult = 1.0;
+      if(adj==='athlete') adjMult = 1.15;
+      if(adj==='medical') adjMult = 1.0; // keep same but show notice
+
+      let total = (baseMl + activityAdd + climateAdd) * adjMult;
+      total = Math.max(1200, Math.round(total)); // minimum sensible
+
+      // Update DOM values (but DO NOT call updateProgress here to avoid recursion)
+      $('goal-ml').textContent = total + ' ml / day';
+      $('goal-note').textContent = `Base ${Math.round(baseMl)} ml + activity ${activityAdd} ml + climate ${climateAdd} ml (adjust x${adjMult}).`;
+      $('today-goal').textContent = total + ' ml';
+
+      // Cache and return goal. Do NOT trigger updateProgress from here.
+      _cachedGoal = total;
+      return total;
+    }
+
+    // Log functions
+    function addLog(ml){
+      const entry = {id: uid(), ml: Math.round(ml), timestamp: new Date().toISOString()};
+      log.push(entry); lastAction = {type:'add', entry};
+      renderLog(); updateProgress();
+    }
+
+    function undo(){
+      if(!lastAction) return; if(lastAction.type==='add'){ log = log.filter(e=>e.id !== lastAction.entry.id); }
+      lastAction = null; renderLog(); updateProgress();
+    }
+
+    function clearLog(){ lastAction = {type:'clear', prev: [...log]}; log = []; renderLog(); updateProgress(); }
+
+    function exportCsv(){
+      if(log.length===0){ alert('No data to export'); return; }
+      let csv = 'id,ml,timestamp\n';
+      log.forEach(r=>{csv += `${r.id},${r.ml},${r.timestamp}\n`});
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'hydration-log.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function renderLog(){
+      const el = $('log-list'); el.innerHTML = '';
+      log.slice().reverse().forEach(r=>{
+        const row = document.createElement('div'); row.className='log-item';
+        const t = new Date(r.timestamp);
+        row.innerHTML = `<div><strong>${formatMl(r.ml)}</strong><div class='muted'>${t.toLocaleTimeString()}</div></div><div><button class='btn-ghost' data-id='${r.id}'>Remove</button></div>`;
+        el.appendChild(row);
+      });
+      // remove handlers
+      Array.from(el.querySelectorAll('button')).forEach(b=>b.onclick = (e)=>{ const id = e.target.dataset.id; lastAction={type:'remove', entry: log.find(x=>x.id===id)}; log = log.filter(x=>x.id!==id); renderLog(); updateProgress(); });
+    }
+
+    function totalToday(){ return log.reduce((s,r)=>s + r.ml, 0); }
+
+    function updateProgress(){
+      // Get current goal from cache or recalc if missing
+      const goal = calculateGoalCached();
+      const total = totalToday();
+      const pct = Math.min(100, Math.round((total / goal) * 100));
+      $('progress-bar').style.width = pct + '%';
+      $('today-total').textContent = formatMl(total);
+      $('goal-label').textContent = pct + '%';
+      drawChart();
+    }
+
+    // Cache goal to avoid unnecessary recalculation
+    let _cachedGoal = null;
+    function calculateGoalCached(){ if(_cachedGoal !== null) return _cachedGoal; return calculateGoal(); }
+
+    // Chart
+    function drawChart(){
+      const canvas = $('chart'); const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
+      const goal = (_cachedGoal !== null) ? _cachedGoal : calculateGoalCached();
+      // show bars per log item (time order)
+      const data = log.slice(); const w = canvas.width; const h = canvas.height; const padding = 30;
+      if(data.length===0){ ctx.fillStyle= '#7ecdf7'; ctx.font='14px Inter, Arial'; ctx.fillText('No entries yet — add a glass to start tracking', 20, 30); return; }
+      const maxVal = Math.max(goal, ...data.map(d=>d.ml));
+      const barW = (w - padding*2) / Math.max(1,data.length) * 0.7;
+      data.forEach((d,i)=>{
+        const vh = (d.ml / maxVal) * (h - padding*2);
+        const x = padding + i * ((w - padding*2)/data.length) + (((w-padding*2)/data.length) - barW)/2;
+        ctx.fillStyle = 'rgba(95,195,255,0.9)'; ctx.fillRect(x, h - padding - vh, barW, vh);
+        ctx.fillStyle='#03414a'; ctx.font='11px Inter, Arial'; ctx.textAlign='center'; ctx.fillText((d.ml)+'ml', x + barW/2, h - padding - vh - 6);
+      });
+      // goal line
+      ctx.strokeStyle = '#0b6b8a'; ctx.lineWidth = 2; ctx.beginPath(); const gy = h - padding - (goal/maxVal)*(h-padding*2); ctx.moveTo(padding-6, gy); ctx.lineTo(w-padding+6, gy); ctx.stroke(); ctx.fillStyle='#0b6b8a'; ctx.font='12px Inter'; ctx.fillText('Goal', w - padding + 20, gy + 4);
+    }
+
+    // Event wiring
+    $('calc-goal').addEventListener('click', ()=>{ calculateGoal(); alert('Daily goal updated. See the right panel for details.'); updateProgress(); });
+    $('add-glass').addEventListener('click', ()=>{
+      const size = $('glass-size').value; const unit = $('glass-unit').value; const ml = mlFromInput(size, unit); addLog(ml);
+    });
+    $('undo').addEventListener('click', ()=>{ undo(); });
+    $('clear-log').addEventListener('click', ()=>{ if(confirm('Clear today\'s log?')) clearLog(); });
+    $('export-csv').addEventListener('click', exportCsv);
+    $('reset-profile').addEventListener('click', ()=>{ $('weight').value=70; $('weight-unit').value='kg'; $('activity').value='moderate'; $('climate').value='temperate'; $('adjustment').value='standard'; calculateGoal(); updateProgress(); });
+
+    // init
+    calculateGoal(); renderLog(); drawChart(); updateProgress();
+
+    // Accessibility: Enter to add glass when focus on size
+    $('glass-size').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ $('add-glass').click(); }});
+  </script>
+</body>
+</html>
