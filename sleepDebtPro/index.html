@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sleep Debt & Productivity Calculator</title>
+  <meta name="description" content="Enter your actual sleep hours versus recommended sleep to see how sleep debt affects your productivity and focus. Get recovery tips and a personalized plan." />
+  <style>
+    :root{
+      --bg:#0b0b0b;                  /* deep black */
+      --panel:#0f1720;               /* slightly lighter */
+      --muted:#9aa3ac;
+      --accent1:#d1d5db;             /* soft light for text */
+      --accent2:#ffd166;             /* warm accent */
+      --accent3:#6ee7b7;             /* mint accent */
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      --shadow: 0 8px 30px rgba(0,0,0,0.6);
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;padding:28px;background:linear-gradient(180deg,var(--bg) 0%, #141414 60%);color:var(--accent1)}
+    .app{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:20px}
+    header{grid-column:1/-1;display:flex;gap:16px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#111827,#0b1220);display:flex;align-items:center;justify-content:center;color:var(--accent2);font-weight:900;font-size:20px;box-shadow:var(--shadow)}
+    h1{margin:0;font-size:20px;color:var(--accent1)}
+    p.lead{margin:4px 0 0;color:var(--muted)}
+
+    .card{background:linear-gradient(180deg,var(--panel), rgba(20,25,30,0.8));padding:16px;border-radius:var(--radius);box-shadow:var(--shadow)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=number], select, input[type=text]{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--accent1);font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    button{padding:10px 12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn-primary{background:linear-gradient(90deg,var(--accent2),var(--accent3));color:#071014}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent1)}
+
+    .summary .big{font-size:18px;font-weight:800;color:var(--accent1)}
+    .muted{color:var(--muted)}
+
+    .timeline{margin-top:10px;border-radius:10px;padding:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+    .step{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:8px}
+    .pill{min-width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent1)}
+
+    canvas{width:100%;height:220px;border-radius:10px;background:transparent}
+
+    footer{grid-column:1/-1;margin-top:10px;color:var(--muted);font-size:13px}
+
+    @media (max-width:980px){.app{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">Zz</div>
+      <div>
+        <h1>Sleep Debt & Productivity Calculator</h1>
+        <p class="lead">Enter your actual sleep hours vs recommended to see how sleep debt impacts productivity and get a recovery plan.</p>
+      </div>
+    </header>
+
+    <main class="card" aria-labelledby="inputs">
+      <h2 id="inputs">Your sleep data</h2>
+      <div class="grid">
+        <div>
+          <label>Recommended sleep per night (hours)</label>
+          <input id="rec-sleep" type="number" min="4" max="12" step="0.25" value="8" />
+        </div>
+        <div>
+          <label>Target awake productivity (%)</label>
+          <input id="target-prod" type="number" min="20" max="120" step="1" value="100" />
+        </div>
+
+        <div style="grid-column:1/ -1">
+          <label>Enter actual sleep hours for the past days (comma-separated). Most recent day last. Example: 7,6.5,5,8</label>
+          <input id="history" type="text" placeholder="e.g. 7,6.5,5,8" value="6.5,7,5.5,6,8" />
+        </div>
+
+        <div>
+          <label>Recovery strategy</label>
+          <select id="strategy"><option value="extra_sleep">Extra sleep until recovered</option><option value="nap_recovery">Short naps + earlier bedtime</option><option value="split_sleep">Split sleep (biphasic)</option></select>
+        </div>
+        <div>
+          <label>Days to simulate</label>
+          <input id="days" type="number" min="1" max="14" value="7" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="calc" class="btn-primary">Calculate sleep debt</button>
+        <button id="reset" class="btn-ghost">Reset</button>
+      </div>
+
+      <section style="margin-top:14px">
+        <h3>Tips</h3>
+        <ul class="muted">
+          <li>Consistent sleep schedule is the strongest lever to reduce sleep debt.</li>
+          <li>Short naps (≤30 min) can boost alertness without reducing nighttime sleep drive.</li>
+          <li>For chronic sleep debt, gradual bedtime shifts and prioritizing sleep are recommended.</li>
+        </ul>
+      </section>
+    </main>
+
+    <aside class="card">
+      <section>
+        <h3>Summary</h3>
+        <div class="summary">
+          <div class="muted">Total sleep debt (hours)</div>
+          <div class="big" id="debt-total">—</div>
+          <div style="margin-top:8px" class="muted">Estimated productivity impact</div>
+          <div class="big" id="prod-impact">—</div>
+          <div style="margin-top:8px" class="muted">Recommended recovery</div>
+          <div id="rec-plan">—</div>
+        </div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Recovery timeline</h3>
+        <div class="timeline" id="timeline"></div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Visualization</h3>
+        <canvas id="chart" width="400" height="200" role="img" aria-label="Sleep hours chart"></canvas>
+      </section>
+    </aside>
+  </div>
+
+  <script>
+    // Helpers
+    const $ = (id)=>document.getElementById(id);
+    function parseHistory(s){
+      if(!s) return [];
+      return s.split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+    }
+
+    function round2(n){return Math.round(n*100)/100}
+
+    // Productivity model (heuristic): assume linear drop of 5% productivity per hour of average sleep deficit up to 50% drop
+    function estimateProductivityImpact(avgSleep, recSleep, targetProd){
+      const deficit = Math.max(0, recSleep - avgSleep);
+      const dropPct = Math.min(50, deficit * 5); // 5% per hour deficit cap 50%
+      const projected = Math.max(0, targetProd - (targetProd * (dropPct/100)));
+      return {deficit, dropPct, projected};
+    }
+
+    function computeDebt(history, recSleep){
+      const totalDeficit = history.reduce((sum,h)=> sum + Math.max(0, recSleep - h), 0);
+      return round2(totalDeficit);
+    }
+
+    function generateRecoveryPlan(history, recSleep, days, strategy){
+      // naive heuristics:
+      // - extra_sleep: add 0.5-1.5h extra per night until debt cleared
+      // - nap_recovery: daytime nap 20-40min + earlier bedtime
+      // - split_sleep: 1 long sleep + short nap
+      const debt = computeDebt(history, recSleep);
+      const plan = [];
+      let remaining = debt;
+      for(let d=1; d<=days; d++){
+        let action='';
+        if(remaining<=0){ action = 'Sleep normal schedule; maintain consistency.'; }
+        else{
+          if(strategy==='extra_sleep'){
+            const extra = Math.min(1.5, Math.max(0.5, remaining / (days - d + 1)));
+            action = `Aim for ${recSleep + round2(extra)} h tonight (extra ${round2(extra)}h) to recover.`;
+            remaining = round2(Math.max(0, remaining - extra));
+          } else if(strategy==='nap_recovery'){
+            const nap = Math.min(0.67, remaining/2); // in hours (~40 min)
+            action = `Short nap ${Math.round(nap*60)} min + bedtime earlier by 30 min.`;
+            remaining = round2(Math.max(0, remaining - nap*0.6)); // naps recover partially
+          } else { // split_sleep
+            const nap = 0.5;
+            action = `Main sleep ${recSleep - 0.5} h + nap ${Math.round(nap*60)} min. Maintain daytime light exposure.`;
+            remaining = round2(Math.max(0, remaining - 0.8));
+          }
+        }
+        plan.push({day:d, action, remaining});
+      }
+      return {debt, plan};
+    }
+
+    function renderTimeline(planObj){
+      const el = $('timeline'); el.innerHTML='';
+      planObj.plan.forEach(p=>{
+        const row = document.createElement('div'); row.className='step';
+        row.innerHTML = `<div class="pill">D${p.day}</div><div><div style="font-weight:700">${p.action}</div><div class="muted">Remaining debt: ${p.remaining} h</div></div>`;
+        el.appendChild(row);
+      });
+    }
+
+    function drawChart(history, recSleep, simPlan){
+      const canvas = $('chart'); const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
+      const w = canvas.width, h = canvas.height, padding=30;
+      const labels = history.map((_,i)=>'Day ' + (i+1));
+      const data = history.slice();
+      const maxVal = Math.max(recSleep, ...data) + 2;
+      const barW = (w - padding*2)/Math.max(1,data.length) * 0.6;
+      data.forEach((v,i)=>{
+        const vh = (v / maxVal) * (h - padding*2);
+        const x = padding + i * ((w - padding*2)/data.length) + (((w-padding*2)/data.length) - barW)/2;
+        ctx.fillStyle = 'rgba(255,209,102,0.9)'; ctx.fillRect(x, h - padding - vh, barW, vh);
+        ctx.fillStyle= '#e6e7e8'; ctx.font='12px Inter'; ctx.textAlign='center'; ctx.fillText(v + 'h', x + barW/2, h - padding - vh - 6);
+      });
+      // rec line
+      ctx.strokeStyle = '#6ee7b7'; ctx.lineWidth = 2; const ry = h - padding - (recSleep/maxVal)*(h-padding*2); ctx.beginPath(); ctx.moveTo(padding-6, ry); ctx.lineTo(w-padding+6, ry); ctx.stroke(); ctx.fillStyle='#6ee7b7'; ctx.fillText('Recommended ' + recSleep + 'h', w - padding + 18, ry + 4);
+    }
+
+    // Event handling
+    $('calc').addEventListener('click', ()=>{
+      const rec = parseFloat($('rec-sleep').value) || 8;
+      const hist = parseHistory($('history').value);
+      const days = parseInt($('days').value) || 7;
+      const strategy = $('strategy').value;
+      if(hist.length===0){ alert('Please enter past sleep hours in the history field.'); return; }
+
+      const debt = computeDebt(hist, rec);
+      const avg = hist.reduce((s,v)=>s+v,0)/hist.length;
+      const prod = estimateProductivityImpact(avg, rec, parseFloat($('target-prod').value)||100);
+      const planObj = generateRecoveryPlan(hist, rec, days, strategy);
+
+      $('debt-total').textContent = debt + ' h';
+      $('prod-impact').textContent = `${round2(prod.dropPct)}% drop → est. productivity ${round2(prod.projected)}%`;
+      $('rec-plan').textContent = `Strategy: ${strategy.replace('_',' ')} — begin tonight with prioritized sleep.`;
+
+      renderTimeline(planObj);
+      drawChart(hist, rec, planObj);
+    });
+
+    $('reset').addEventListener('click', ()=>{
+      $('rec-sleep').value = 8; $('target-prod').value = 100; $('history').value = '6.5,7,5.5,6,8'; $('strategy').value='extra_sleep'; $('days').value=7;
+      $('debt-total').textContent = '—'; $('prod-impact').textContent='—'; $('rec-plan').textContent='—'; $('timeline').innerHTML=''; const c=$('chart'); c.getContext('2d').clearRect(0,0,c.width,c.height);
+    });
+
+    // init: draw default
+    (function init(){ const hist = parseHistory($('history').value); drawChart(hist, parseFloat($('rec-sleep').value)); })();
+
+  </script>
+</body>
+</html>
