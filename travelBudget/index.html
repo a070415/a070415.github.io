@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Travel Budget & Currency Converter Calculator</title>
+  <meta name="description" content="Plan your trip expenses by entering destination, duration, and budget categories. Converts currencies and summarizes costs." />
+  <style>
+    :root{
+      --bg:#fbf7ff;
+      --card:#ffffff;
+      --muted:#6b5e7a;
+      --accent1:#a78bfa; /* purple */
+      --accent2:#7c3aed;
+      --accent3:#e9d5ff;
+      --radius:14px;
+      --shadow:0 10px 30px rgba(124,58,237,0.12);
+      font-family:Inter, system-ui, -apple-system,'Segoe UI',Roboto,Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;padding:28px;background:linear-gradient(180deg,#fffafa 0%,#f8f5ff 60%);color:#241a2e}
+    .app{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:20px}
+    header{grid-column:1/-1;display:flex;gap:16px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:20px;box-shadow:var(--shadow)}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:4px 0 0;color:var(--muted)}
+    .card{background:var(--card);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text], input[type=number], select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(36,26,46,0.06);font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    button{padding:10px 12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn-primary{background:linear-gradient(90deg,var(--accent2),var(--accent1));color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+    .rows{margin-top:12px}
+    .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .small{font-size:13px;color:var(--muted)}
+    .breakdown{margin-top:12px}
+    .break-row{display:flex;justify-content:space-between;padding:8px;border-radius:10px;background:linear-gradient(90deg,rgba(167,139,250,0.08),rgba(124,58,237,0.03));margin-bottom:8px}
+    .total{font-weight:800;font-size:18px}
+    canvas{width:100%;height:200px}
+    footer{grid-column:1/-1;margin-top:10px;color:var(--muted);font-size:13px}
+    @media (max-width:980px){.app{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">TR</div>
+      <div>
+        <h1>Travel Budget & Currency Converter</h1>
+        <p class="lead">Plan trip expenses by destination, duration and categories. Convert currencies and manage your spending.</p>
+      </div>
+    </header>
+
+    <main class="card">
+      <h2>Trip info</h2>
+      <div class="grid">
+        <div>
+          <label>Destination</label>
+          <input id="destination" type="text" placeholder="City or country (e.g. Tokyo)" />
+        </div>
+        <div>
+          <label>Duration (days)</label>
+          <input id="days" type="number" min="1" value="7" />
+        </div>
+        <div>
+          <label>Destination currency</label>
+          <input id="dest-curr" type="text" value="JPY" />
+        </div>
+        <div>
+          <label>Home currency</label>
+          <input id="home-curr" type="text" value="USD" />
+        </div>
+      </div>
+
+      <h3 style="margin-top:12px">Budget categories (daily)</h3>
+      <div class="rows" id="categories">
+        <!-- rows added by JS -->
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+        <input id="new-cat" type="text" placeholder="New category name" />
+        <input id="new-amt" type="number" placeholder="daily amount" />
+        <button id="add-cat" class="btn-primary">Add</button>
+      </div>
+
+      <div class="actions">
+        <button id="calc" class="btn-primary">Calculate Total</button>
+        <button id="fetch-rates" class="btn-ghost">Fetch live rates</button>
+        <button id="reset" class="btn-ghost">Reset</button>
+      </div>
+
+      <p class="small" style="margin-top:8px">You can type currency codes (ISO 4217) like USD, EUR, JPY. Live rates use exchangerate.host if available; fallback to static sample rates.</p>
+
+    </main>
+
+    <aside class="card">
+      <section>
+        <h3>Summary</h3>
+        <div class="breakdown" id="breakdown"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div class="small">Total (dest currency)</div>
+          <div class="total" id="total-dest">—</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <div class="small">Converted to home</div>
+          <div class="total" id="total-home">—</div>
+        </div>
+        <div class="small" style="margin-top:8px">Budget (home currency):</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <input id="budget-home" type="number" placeholder="e.g. 2000" />
+          <button id="check-budget" class="btn-primary">Check</button>
+        </div>
+        <div id="budget-result" style="margin-top:8px" class="small"></div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Visualization</h3>
+        <canvas id="chart" width="400" height="200"></canvas>
+      </section>
+
+    </aside>
+  </div>
+
+<script>
+  // Simple app state
+  let categories = [
+    {id: id(), name:'Accommodation', daily:100},
+    {id: id(), name:'Food', daily:30},
+    {id: id(), name:'Transport', daily:10},
+    {id: id(), name:'Activities', daily:20},
+    {id: id(), name:'Misc', daily:10}
+  ];
+  let rates = { // sample fallback rates relative to USD
+    'USD':1, 'EUR':0.9, 'JPY':150, 'KRW':1400, 'GBP':0.78
+  };
+
+  function id(){return Math.random().toString(36).slice(2,9)}
+  const $ = (id)=>document.getElementById(id);
+
+  function renderCategories(){
+    const el = $('categories'); el.innerHTML='';
+    categories.forEach(c=>{
+      const row = document.createElement('div'); row.className='row';
+      row.innerHTML = `<input data-id='${c.id}' class='cat-name' value='${escapeHtml(c.name)}' /><input data-id='${c.id}' class='cat-amt' type='number' value='${c.daily}' /><button data-id='${c.id}' class='btn-ghost remove'>Remove</button>`;
+      el.appendChild(row);
+    });
+    // wire events
+    Array.from(el.querySelectorAll('.remove')).forEach(b=>b.onclick = e=>{ const id = e.target.dataset.id; categories = categories.filter(x=>x.id!==id); renderCategories(); });
+    Array.from(el.querySelectorAll('.cat-name')).forEach(i=>i.oninput = e=>{ const id=e.target.dataset.id; categories = categories.map(x=> x.id===id?{...x,name:e.target.value}:x); });
+    Array.from(el.querySelectorAll('.cat-amt')).forEach(i=>i.oninput = e=>{ const id=e.target.dataset.id; categories = categories.map(x=> x.id===id?{...x,daily:parseFloat(e.target.value)||0}:x); });
+  }
+
+  function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  // Calculate totals
+  function calculate(){
+    const days = parseInt($('days').value) || 1;
+    const destCurr = ($('dest-curr').value || 'USD').toUpperCase();
+    const homeCurr = ($('home-curr').value || 'USD').toUpperCase();
+
+    const breakdownEl = $('breakdown'); breakdownEl.innerHTML='';
+    let totalDest = 0;
+    categories.forEach(c=>{
+      const catTotal = round2(c.daily * days);
+      totalDest += catTotal;
+      const row = document.createElement('div'); row.className='break-row';
+      row.innerHTML = `<div>${escapeHtml(c.name)} (${c.daily} /day)</div><div>${catTotal} ${destCurr}</div>`;
+      breakdownEl.appendChild(row);
+    });
+
+    $('total-dest').textContent = `${round2(totalDest)} ${destCurr}`;
+
+    // conversion
+    convertCurrency(totalDest, destCurr, homeCurr).then(totalHome => {
+      $('total-home').textContent = `${round2(totalHome)} ${homeCurr}`;
+      drawChart(categories, days, destCurr);
+    }).catch(err=>{
+      console.error('Conversion failed', err);
+      // fallback: if currencies known in sample rates, compute via USD base
+      const fallback = convertFallback(totalDest, destCurr, homeCurr);
+      $('total-home').textContent = `${round2(fallback)} ${homeCurr}`;
+      drawChart(categories, days, destCurr);
+    });
+  }
+
+  // Attempt to fetch live rates from exchangerate.host (CORS-friendly). If fails, reject.
+  async function fetchRates(base='USD'){
+    try{
+      const res = await fetch(`https://api.exchangerate.host/latest?base=${base}`);
+      if(!res.ok) throw new Error('Network response not ok');
+      const data = await res.json();
+      return data.rates; // object of rates relative to base
+    }catch(e){ throw e }
+  }
+
+  async function convertCurrency(amount, from, to){
+    from = from.toUpperCase(); to = to.toUpperCase();
+    // If a direct rate exists in sample, use it quickly
+    if(rates[from] && rates[to]){
+      // convert via USD baseline in sample table
+      const valUsd = amount / rates[from];
+      return valUsd * rates[to];
+    }
+    // otherwise try live fetch using from as base
+    try{
+      const live = await fetchRates(from);
+      if(live && live[to]){
+        return amount * live[to];
+      }
+      throw new Error('Rate not available');
+    }catch(e){
+      // try fetch with USD base then compute
+      try{
+        const live2 = await fetchRates('USD');
+        if(live2 && live2[from] && live2[to]){
+          // amount in from -> to: amount / rate[from] * rate[to] (rates are relative to USD)
+          const usdAmount = amount / live2[from];
+          return usdAmount * live2[to];
+        }
+      }catch(e2){
+        // final fallback
+        throw new Error('Live fetch failed');
+      }
+      throw e;
+    }
+  }
+
+  function convertFallback(amount, from, to){
+    from = from.toUpperCase(); to = to.toUpperCase();
+    if(!rates[from] || !rates[to]){
+      // if unknown, return amount (no conversion)
+      return amount;
+    }
+    const usd = amount / rates[from];
+    return usd * rates[to];
+  }
+
+  function round2(n){return Math.round(n*100)/100}
+
+  // Chart drawing
+  function drawChart(categories, days, curr){
+    const canvas = $('chart'); const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
+    const data = categories.map(c=> c.daily * days);
+    const labels = categories.map(c=> c.name);
+    const total = data.reduce((s,v)=>s+v,0);
+    if(data.length===0){ ctx.fillStyle='#7c3aed'; ctx.fillText('Add categories to visualize',20,30); return }
+    const w = canvas.width, h=canvas.height, padding=30;
+    const maxVal = Math.max(...data, total/labels.length);
+    const barW = (w - padding*2) / data.length * 0.6;
+    data.forEach((v,i)=>{
+      const vh = (v / maxVal) * (h - padding*2);
+      const x = padding + i * ((w - padding*2)/data.length) + (((w-padding*2)/data.length) - barW)/2;
+      ctx.fillStyle = 'rgba(167,139,250,0.9)'; ctx.fillRect(x, h - padding - vh, barW, vh);
+      ctx.fillStyle='#241a2e'; ctx.textAlign='center'; ctx.font='12px Inter'; ctx.fillText(labels[i], x + barW/2, h - padding + 14);
+      ctx.fillText(v + ' ' + curr, x + barW/2, h - padding - vh - 6);
+    });
+  }
+
+  // Wire UI
+  $('add-cat').addEventListener('click', ()=>{
+    const name = $('new-cat').value.trim(); const amt = parseFloat($('new-amt').value) || 0;
+    if(!name) { alert('Enter category name'); return }
+    categories.push({id:id(), name, daily:amt}); renderCategories(); $('new-cat').value=''; $('new-amt').value='';
+  });
+
+  $('calc').addEventListener('click', ()=>{ calculate(); });
+  $('reset').addEventListener('click', ()=>{ categories = [
+    {id: id(), name:'Accommodation', daily:100},
+    {id: id(), name:'Food', daily:30},
+    {id: id(), name:'Transport', daily:10},
+    {id: id(), name:'Activities', daily:20},
+    {id: id(), name:'Misc', daily:10}
+  ]; $('destination').value=''; $('days').value=7; $('dest-curr').value='JPY'; $('home-curr').value='USD'; $('budget-home').value=''; renderCategories(); $('breakdown').innerHTML=''; $('total-dest').textContent='—'; $('total-home').textContent='—'; const c=$('chart'); c.getContext('2d').clearRect(0,0,c.width,c.height); });
+
+  $('fetch-rates').addEventListener('click', async ()=>{
+    const base = 'USD';
+    $('fetch-rates').textContent='Fetching...';
+    try{
+      const live = await fetchRates(base);
+      // merge a few keys into sample rates for conversions
+      ['USD','EUR','JPY','KRW','GBP'].forEach(k=>{ if(live[k]) rates[k]=live[k]; });
+      alert('Fetched latest USD-based rates (some keys updated).');
+    }catch(e){ alert('Failed to fetch live rates — using fallback sample rates.'); }
+    $('fetch-rates').textContent='Fetch live rates';
+  });
+
+  $('check-budget').addEventListener('click', ()=>{
+    const budget = parseFloat($('budget-home').value) || 0;
+    const totalHomeText = $('total-home').textContent;
+    if(!totalHomeText || totalHomeText==='—'){ alert('Please calculate totals first.'); return }
+    const totalHome = parseFloat(totalHomeText.split(' ')[0].replace(',','')) || 0;
+    if(budget<=0){ $('budget-result').textContent = 'Enter a positive budget.'; return }
+    const diff = round2(budget - totalHome);
+    if(diff>=0) $('budget-result').textContent = `Within budget — remaining ${diff} ${$('home-curr').value.toUpperCase()}`;
+    else $('budget-result').textContent = `Over budget by ${Math.abs(diff)} ${$('home-curr').value.toUpperCase()}`;
+  });
+
+  // init
+  renderCategories();
+</script>
+</body>
+</html>
