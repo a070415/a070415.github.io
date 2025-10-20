@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jet Lag Recovery Simulator</title>
+  <meta name="description" content="Input your departure and arrival locations, flight duration, and time zones to calculate the optimal sleep and activity schedule for faster jet lag recovery." />
+  <style>
+    :root{
+      --bg: #f3fff6;
+      --card: #ffffff;
+      --muted: #556b5a;
+      --accent1: #5ee082; /* bright green */
+      --accent2: #1db954; /* deeper green */
+      --accent3: #b2f5c1;
+      --glass: rgba(255,255,255,0.7);
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(20,40,20,0.06);
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;padding:28px;background:linear-gradient(180deg,#f7fff9 0%, #eaffef 60%);color:#073019}
+    .app{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:20px}
+    header{grid-column:1/-1;display:flex;gap:16px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:#06381d;font-weight:800;font-size:20px;box-shadow:var(--shadow)}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:4px 0 0;color:var(--muted)}
+
+    .card{background:var(--card);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text], input[type=datetime-local], input[type=number], select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    button{padding:10px 12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn-primary{background:linear-gradient(90deg,var(--accent2),var(--accent1));color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+    .summary .big{font-size:18px;font-weight:800}
+    .muted{color:var(--muted)}
+
+    .timeline{margin-top:10px;border-radius:10px;padding:10px;background:linear-gradient(180deg, rgba(238,255,241,0.9), rgba(246,255,249,0.9));}
+    .step{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:8px}
+    .pill{min-width:36px;height:36px;border-radius:10px;background:var(--accent3);display:flex;align-items:center;justify-content:center;font-weight:700;color:#044023}
+
+    canvas{width:100%;height:220px;border-radius:10px;background:transparent}
+
+    footer{grid-column:1/-1;margin-top:10px;color:var(--muted);font-size:13px}
+
+    @media (max-width:980px){.app{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">JLR</div>
+      <div>
+        <h1>Jet Lag Recovery Simulator</h1>
+        <p class="lead">Plan sleep and light exposure to recover faster. Enter departure/arrival, flight duration or arrival time, and time zones.</p>
+      </div>
+    </header>
+
+    <main class="card">
+      <section aria-labelledby="inputs">
+        <h2 id="inputs">Trip details</h2>
+        <div class="grid">
+          <div>
+            <label>Departure city (optional)</label>
+            <input id="dep-city" type="text" placeholder="e.g. New York" />
+          </div>
+          <div>
+            <label>Departure time zone</label>
+            <select id="dep-tz"></select>
+          </div>
+
+          <div>
+            <label>Departure local datetime</label>
+            <input id="dep-dt" type="datetime-local" />
+          </div>
+          <div>
+            <label>Flight duration (hours)</label>
+            <input id="flight-hours" type="number" min="0" step="0.25" value="8" />
+          </div>
+
+          <div>
+            <label>Arrival city (optional)</label>
+            <input id="arr-city" type="text" placeholder="e.g. Seoul" />
+          </div>
+          <div>
+            <label>Arrival time zone</label>
+            <select id="arr-tz"></select>
+          </div>
+
+          <div>
+            <label>Or set arrival local datetime (optional)</label>
+            <input id="arr-dt" type="datetime-local" />
+          </div>
+          <div>
+            <label>Direction</label>
+            <select id="direction"><option value="east">Eastward (jet lag worse)</option><option value="west">Westward</option></select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="simulate" class="btn-primary">Generate plan</button>
+          <button id="quick-reset" class="btn-ghost">Reset</button>
+        </div>
+
+        <p class="muted" style="margin-top:8px">Tip: choose time zones using IANA tz names if you want precise offsets (e.g. America/New_York, Europe/London, Asia/Seoul). Common options provided.</p>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Settings</h3>
+        <div class="grid">
+          <div>
+            <label>How many days to plan</label>
+            <input id="plan-days" type="number" min="1" max="7" value="3" />
+          </div>
+          <div>
+            <label>Preferred sleep per night (hours)</label>
+            <input id="target-sleep" type="number" min="4" max="10" step="0.5" value="8" />
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <aside class="card">
+      <section>
+        <h3>Quick summary</h3>
+        <div class="summary">
+          <div class="muted">Time difference</div>
+          <div class="big" id="tz-diff">—</div>
+          <div class="muted" style="margin-top:8px">Recommended pre-adjustment</div>
+          <div id="pre-adjust">—</div>
+        </div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Plan timeline</h3>
+        <div class="timeline" id="timeline"></div>
+      </section>
+
+      <section style="margin-top:12px">
+        <h3>Visualization</h3>
+        <canvas id="chart" width="400" height="200"></canvas>
+      </section>
+    </aside>
+
+    <footer>Built with a gentle green palette — you can copy this file to GitHub and serve as a single-page tool.</footer>
+  </div>
+
+  <script>
+    // Timezone options (common list). Users can type full IANA name into select via datalist-like typing.
+    const commonTZ = [
+      'UTC','Europe/London','Europe/Paris','America/New_York','America/Chicago','America/Los_Angeles','Asia/Seoul','Asia/Tokyo','Asia/Hong_Kong','Australia/Sydney','Pacific/Auckland','America/Sao_Paulo'
+    ];
+
+    function fillTz(selectId){
+      const sel = document.getElementById(selectId);
+      commonTZ.forEach(tz=>{const o=document.createElement('option');o.value=tz;o.textContent=tz;sel.appendChild(o)});
+    }
+    fillTz('dep-tz'); fillTz('arr-tz');
+
+    // Utilities
+    const $ = (id)=>document.getElementById(id);
+    function parseLocalDt(input){ // datetime-local string to Date (interpreted as local to chosen tz)
+      return input ? new Date(input) : null;
+    }
+
+    function tzOffsetHours(tz, atDate=new Date()){ // returns offset in hours (destination tz offset from UTC)
+      try{
+        const dtf = new Intl.DateTimeFormat('en-US',{timeZone:tz, hour12:false, year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        const parts = dtf.formatToParts(atDate);
+        const map = {};
+        parts.forEach(p=>map[p.type]=p.value);
+        const asLocal = new Date(`${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}:${map.second}Z`);
+        // asLocal is the UTC time that would produce those fields (trick). Offset = (asLocal - atDate)/ms per hour
+        const offset = (asLocal.getTime() - atDate.getTime()) / (1000*60*60);
+        return offset;
+      }catch(e){return 0}
+    }
+
+    function hoursBetween(a,b){return (b.getTime()-a.getTime())/(1000*60*60)}
+
+    function round2(n){return Math.round(n*100)/100}
+
+    // Main simulate
+    $('simulate').addEventListener('click', ()=>{
+      // gather inputs
+      const depTz = $('dep-tz').value || 'UTC';
+      const arrTz = $('arr-tz').value || 'UTC';
+      const depDtStr = $('dep-dt').value;
+      const arrDtStr = $('arr-dt').value;
+      const flightH = parseFloat($('flight-hours').value) || 0;
+      const planDays = parseInt($('plan-days').value) || 3;
+      const targetSleep = parseFloat($('target-sleep').value) || 8;
+      const direction = $('direction').value;
+
+      // determine departure Date object in UTC
+      let depLocal = depDtStr ? new Date(depDtStr) : new Date();
+      // compute arrival local either from arr-dt or dep + flight
+      let arrLocal = arrDtStr ? new Date(arrDtStr) : new Date(depLocal.getTime() + flightH*3600*1000);
+
+      // compute timezone offsets
+      const depOffset = tzOffsetHours(depTz, depLocal); // hours to add to local to get UTC? See function returns asLocal - atDate -> positive when tz ahead?
+      const arrOffset = tzOffsetHours(arrTz, arrLocal);
+      // We'll compute utc times by subtracting offset hours
+      const depUtc = new Date(depLocal.getTime() - depOffset*3600*1000);
+      const arrUtc = new Date(arrLocal.getTime() - arrOffset*3600*1000);
+
+      const diffHours = round2((arrUtc.getTime() - depUtc.getTime())/(1000*60*60));
+      // simpler: time difference between zones at travel moment
+      const tzDiff = round2(arrOffset - depOffset);
+
+      $('tz-diff').textContent = `${tzDiff} hours (${depTz} → ${arrTz})`;
+
+      // Recommendation logic:
+      // - Pre-adjust: shift sleep schedule by 0.5-1 hour per day depending on magnitude (eastward harder)
+      const absDiff = Math.abs(tzDiff);
+      const shiftPerDay = tzDiff>0 ? (direction==='east' ? 1.0 : 0.75) : (direction==='west' ? 0.75 : 0.5);
+      const suggestedShift = Math.min(absDiff, Math.ceil(absDiff));
+      const daysNeeded = Math.ceil(absDiff / Math.max(0.5, shiftPerDay));
+
+      let preAdjust = `Start shifting your sleep by about ${shiftPerDay} hour(s) per day, for ${daysNeeded} day(s) before travel to move ${tzDiff>0?'forward':'backward'} ${absDiff} hour(s).`;
+      if(absDiff<=2) preAdjust = `Minimal adjustment needed. Try to slightly shift 15-30 minutes for a day or two before travel.`;
+      $('pre-adjust').textContent = preAdjust;
+
+      // Build day-by-day plan starting from departure local day and continuing planDays after arrival local
+      const plan = [];
+      // Pre-travel days (up to daysNeeded, but not more than 5)
+      const preDays = Math.min(daysNeeded, 5);
+      for(let i=preDays;i>=1;i--){
+        const shift = -(Math.sign(tzDiff) * shiftPerDay * i);
+        plan.push({label:`Day -${i} (pre)`, detail:`Shift bedtime earlier by ${Math.abs(shift)}h. Aim for ${targetSleep}h sleep.`});
+      }
+
+      // On-flight recommendation
+      const depLocalStr = depLocal.toLocaleString('en-US', {timeZone: depTz});
+      const arrLocalStr = arrLocal.toLocaleString('en-US', {timeZone: arrTz});
+      plan.push({label:'Flight', detail:`Depart: ${depLocalStr} (${depTz}). Arrive: ${arrLocalStr} (${arrTz}). Try to ${recommendOnFlight(arrLocal, arrTz, flightH)}.`});
+
+      // Post-arrival days
+      for(let d=0; d<planDays; d++){
+        const dayLabel = `Day +${d+1} (arrival day +${d})`;
+        const actions = recommendPostArrival(d, tzDiff, targetSleep);
+        plan.push({label:dayLabel, detail:actions});
+      }
+
+      renderTimeline(plan);
+      drawChart(plan, tzDiff);
+    });
+
+    function recommendOnFlight(arrLocal, arrTz, flightH){
+      // If arrival local time is night, suggest sleep on flight; else stay awake and adapt to destination day.
+      const arrHour = new Intl.DateTimeFormat('en-US',{timeZone:arrTz, hour:'numeric', hour12:false}).formatToParts(arrLocal).find(p=>p.type==='hour').value;
+      const hour = parseInt(arrHour);
+      if(hour >=22 || hour <6) return 'sleep on the flight to match destination night; use eye mask and earplugs.';
+      if(hour >=6 && hour <18) return 'stay awake during flight and get sunlight on arrival day to sync to local time.';
+      return 'nap strategically: short nap early if needed, avoid long naps close to arrival bedtime.';
+    }
+
+    function recommendPostArrival(dayIndex, tzDiff, targetSleep){
+      // Heuristic guidance
+      const lines = [];
+      if(dayIndex===0){
+        lines.push('On arrival: seek bright light if you need to stay awake (day) or avoid light if it is night at destination.');
+        lines.push('Short nap ≤ 30min if extremely tired. Avoid caffeine after mid-afternoon local time.');
+      } else {
+        lines.push('Maintain regular local bedtime and wake time, aim for ' + targetSleep + 'h sleep.');
+        if(Math.abs(tzDiff) > 5) lines.push('Consider low-dose melatonin ~0.5–3 mg before local bedtime (consult a doctor).');
+      }
+      return lines.join(' ');
+    }
+
+    function renderTimeline(plan){
+      const el = $('timeline'); el.innerHTML='';
+      plan.forEach((p,i)=>{
+        const row = document.createElement('div'); row.className='step';
+        row.innerHTML = `<div class="pill">${i+1}</div><div><div style="font-weight:700">${escapeHtml(p.label)}</div><div class="muted">${escapeHtml(p.detail)}</div></div>`;
+        el.appendChild(row);
+      });
+    }
+
+    function drawChart(plan, tzDiff){
+      const canvas = document.getElementById('chart');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // Simple bars: x axis = plan steps, y = subjective difficulty (based on tzDiff and day index)
+      const w = canvas.width; const h = canvas.height; const padding = 30;
+      const N = plan.length; const barW = (w - padding*2)/N * 0.7;
+      for(let i=0;i<N;i++){
+        const difficulty = Math.max(0, Math.min(1, (Math.abs(tzDiff)/12) * (1 - i/N) ));
+        const barH = difficulty * (h - padding*2);
+        const x = padding + i * ((w - padding*2)/N) + ( ( (w-padding*2)/N) - barW)/2;
+        ctx.fillStyle = 'rgba(29,185,84,0.9)';
+        ctx.fillRect(x, h - padding - barH, barW, barH);
+        ctx.fillStyle='#053a22'; ctx.font='12px Inter, Arial'; ctx.textAlign='center'; ctx.fillText(plan[i].label.replace(/\s?\(.+\)/,''), x + barW/2, h - padding + 14);
+      }
+    }
+
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+    // Reset
+    $('quick-reset').addEventListener('click', ()=>{
+      $('dep-city').value=''; $('arr-city').value=''; $('dep-dt').value=''; $('arr-dt').value=''; $('flight-hours').value=8; $('dep-tz').value='UTC'; $('arr-tz').value='UTC'; $('plan-days').value=3; $('target-sleep').value=8; $('direction').value='east'; $('timeline').innerHTML=''; $('tz-diff').textContent='—'; const c=document.getElementById('chart'); c.getContext('2d').clearRect(0,0,c.width,c.height);
+    });
+
+    // small helper: set default departure to now
+    (function setDefaults(){
+      const now = new Date();
+      // set dep-dt to next hour rounded
+      now.setMinutes(0); now.setSeconds(0); now.setMilliseconds(0);
+      const isoLocal = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+      $('dep-dt').value = isoLocal;
+    })();
+
+  </script>
+</body>
+</html>
