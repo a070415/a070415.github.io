@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Price Increase Perception Calculator</title>
+  <meta name="description" content="Track essential expenses and your spending habits to see how price hikes affect your day-to-day budget." />
+  <style>
+    :root{
+      --bg: #fff7ff;
+      --card: #ffffff;
+      --muted: #6b6b6b;
+      --accent1: #ff7ab6;
+      --accent2: #7be0ff;
+      --accent3: #ffd37b;
+      --glass: rgba(255,255,255,0.6);
+      --radius: 16px;
+      --shadow: 0 8px 30px rgba(18,18,18,0.08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: linear-gradient(160deg,var(--accent2) 0%, #eaf7ff 30%, #fff0f6 70%);
+      color:#111827;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+    .app{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:24px;
+      align-items:start;
+    }
+    header{grid-column:1/-1; margin-bottom:8px}
+    .brand{
+      display:flex;align-items:center;gap:14px
+    }
+    .logo{
+      width:60px;height:60px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;box-shadow:var(--shadow)
+    }
+    h1{margin:0;font-size:20px}
+    p.lead{margin:6px 0 0;color:var(--muted)}
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .controls{display:flex;gap:12px;flex-wrap:wrap}
+    .field{display:flex;gap:8px;align-items:center}
+    label{font-size:13px;color:var(--muted)}
+    input[type="number"], input[type="text"], select{
+      padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:14px;background:transparent;min-width:120px
+    }
+    .items{margin-top:12px}
+    .item-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .item-row input{flex:1}
+    .small{font-size:13px;color:var(--muted)}
+
+    .actions{display:flex;gap:8px;margin-top:12px}
+    button{cursor:pointer;border:0;padding:10px 12px;border-radius:10px;font-weight:600}
+    .btn-primary{background:linear-gradient(90deg,var(--accent1),var(--accent3));color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+    .summary{display:flex;flex-direction:column;gap:8px}
+    .big{font-size:20px;font-weight:700}
+    .muted{color:var(--muted)}
+
+    /* right column */
+    .visuals{display:flex;flex-direction:column;gap:12px}
+    canvas{width:100%;height:220px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.7));padding:12px}
+
+    .breakdown{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .breakdown .row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.5));}
+
+    footer{grid-column:1/-1;margin-top:14px;color:var(--muted);font-size:13px}
+
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr}
+      .brand{gap:10px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">PIP</div>
+        <div>
+          <h1>Price Increase Perception Calculator</h1>
+          <p class="lead">Track essential expenses and your spending habits to see how price hikes affect your day-to-day budget.</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="card">
+      <section aria-labelledby="inputs-title">
+        <h2 id="inputs-title">Your Essentials</h2>
+        <p class="small">Add items you consider essential. We'll calculate how price changes change your monthly and yearly spending.</p>
+
+        <div class="items" id="items"></div>
+
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="new-name" type="text" placeholder="Item name (e.g. Groceries)" />
+          <input id="new-amount" type="number" placeholder="Monthly amount" min="0" />
+          <button id="add-item" class="btn-primary">Add item</button>
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div>
+            <label class="small">Common price increase (%)</label>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+              <input id="global-increase" type="number" value="5" min="0" max="200" />
+              <span class="small">% applied to all items (you can override per-item)</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="small">Monthly take-home income</label>
+            <div><input id="income" type="number" value="3000" min="0" /></div>
+          </div>
+
+          <div>
+            <label class="small">Perception slider</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+              <input id="perception" type="range" min="0" max="100" value="50" />
+              <div class="small" id="perception-label">Neutral</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="calc" class="btn-primary">Calculate impact</button>
+          <button id="reset" class="btn-ghost">Reset to defaults</button>
+        </div>
+      </section>
+
+      <section style="margin-top:16px" aria-labelledby="tips-title">
+        <h3 id="tips-title">Tips</h3>
+        <ul style="margin:6px 0 0 18px;color:var(--muted)">
+          <li>Track monthly amounts as what you actually pay (net of refunds).</li>
+          <li>Use per-item overrides if you noticed a specific category rising faster.</li>
+          <li>Compare the extra cost to discretionary spending to decide where to cut back.</li>
+        </ul>
+      </section>
+    </main>
+
+    <aside class="visuals card">
+      <section>
+        <h3>Summary</h3>
+        <div class="summary" id="summary">
+          <div><div class="muted">Total current monthly spending</div><div class="big" id="total-current">—</div></div>
+          <div><div class="muted">Projected monthly after increases</div><div class="big" id="total-new">—</div></div>
+          <div><div class="muted">Extra per month</div><div class="big" id="total-diff">—</div></div>
+          <div class="muted">Extra as % of income: <span id="pct-income">—</span></div>
+        </div>
+      </section>
+
+      <section>
+        <h3>Breakdown</h3>
+        <div class="breakdown" id="breakdown"></div>
+      </section>
+
+      <section>
+        <h3>Visualization</h3>
+        <canvas id="chart" width="600" height="220" role="img" aria-label="Bar chart comparing current vs new monthly spending"></canvas>
+      </section>
+
+    </aside>
+
+    <footer>
+      Built with ♥ — modify this page freely. Suggestions: place an unobtrusive ad banner below the summary or above the footer for monetization. For SEO, add structured data and an accessible, descriptive page title.
+    </footer>
+  </div>
+
+  <script>
+    // Utility
+    const $ = (sel) => document.querySelector(sel);
+    const $all = (sel) => Array.from(document.querySelectorAll(sel));
+
+    // State
+    let items = [
+      {id: uid(), name:'Rent', amount:1200, override:null},
+      {id: uid(), name:'Groceries', amount:400, override:null},
+      {id: uid(), name:'Utilities', amount:120, override:null},
+      {id: uid(), name:'Transport', amount:80, override:null},
+      {id: uid(), name:'Dining Out', amount:100, override:null},
+      {id: uid(), name:'Subscriptions', amount:40, override:null}
+    ];
+
+    function uid(){return Math.random().toString(36).slice(2,9)}
+
+    // Render items
+    function renderItems(){
+      const container = document.getElementById('items');
+      container.innerHTML = '';
+      items.forEach(it=>{
+        const row = document.createElement('div');row.className='item-row';
+        row.innerHTML = `
+          <input data-id="${it.id}" class="name" type="text" value="${escapeHtml(it.name)}" aria-label="item name" />
+          <input data-id="${it.id}" class="amount" type="number" value="${it.amount}" min="0" aria-label="monthly amount" />
+          <input data-id="${it.id}" class="override" type="number" placeholder="% override" ${it.override!==null?"value='"+it.override+"'":""} aria-label="percent override" />
+          <button data-id="${it.id}" class="btn-ghost remove">Remove</button>
+        `;
+        container.appendChild(row);
+      })
+
+      // wiring
+      $all('.remove').forEach(b=>b.onclick = (e)=>{const id=e.target.dataset.id; items=items.filter(x=>x.id!==id); renderItems();});
+      $all('.name').forEach(i=>i.oninput = (e)=>{const id=e.target.dataset.id; const v=e.target.value; items = items.map(x=> x.id===id?{...x,name:v}:x);});
+      $all('.amount').forEach(i=>i.oninput = (e)=>{const id=e.target.dataset.id; const v=parseFloat(e.target.value)||0; items = items.map(x=> x.id===id?{...x,amount:v}:x);});
+      $all('.override').forEach(i=>i.oninput = (e)=>{const id=e.target.dataset.id; const v=e.target.value; const parsed = v===''?null:parseFloat(v); items = items.map(x=> x.id===id?{...x,override:parsed}:x);});
+    }
+
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+    // Initial render
+    renderItems();
+
+    // Add item
+    $('#add-item').addEventListener('click', ()=>{
+      const name = $('#new-name').value.trim();
+      const amt = parseFloat($('#new-amount').value) || 0;
+      if(!name){alert('Please enter an item name');return}
+      items.push({id:uid(),name,amount:amt,override:null});
+      $('#new-name').value='';$('#new-amount').value='';
+      renderItems();
+    });
+
+    // Perception label
+    const perception = $('#perception');
+    const pLabel = $('#perception-label');
+    function updatePerceptionLabel(v){if(v<25)pLabel.textContent='Low concern';else if(v<50)pLabel.textContent='Slightly concerned';else if(v<75)pLabel.textContent='Concerned';else pLabel.textContent='Very concerned';}
+    perception.addEventListener('input', (e)=>updatePerceptionLabel(e.target.value));
+    updatePerceptionLabel(perception.value);
+
+    // Calculate
+    $('#calc').addEventListener('click', compute);
+    $('#reset').addEventListener('click', ()=>{items = [
+      {id: uid(), name:'Rent', amount:1200, override:null},
+      {id: uid(), name:'Groceries', amount:400, override:null},
+      {id: uid(), name:'Utilities', amount:120, override:null},
+      {id: uid(), name:'Transport', amount:80, override:null},
+      {id: uid(), name:'Dining Out', amount:100, override:null},
+      {id: uid(), name:'Subscriptions', amount:40, override:null}
+    ]; renderItems(); $('#global-increase').value=5; $('#income').value=3000; perception.value=50; updatePerceptionLabel(50); compute();});
+
+    // Chart drawing
+    const canvas = document.getElementById('chart');
+    const ctx = canvas.getContext('2d');
+    function drawChart(data){
+      // data: [{label, before, after}]
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const w = canvas.width; const h = canvas.height; const padding=30;
+      const maxVal = Math.max(...data.map(d=>Math.max(d.before,d.after)),1);
+      const barW = (w - padding*2) / data.length * 0.9;
+
+      // axes labels
+      ctx.font = '12px Inter, Arial'; ctx.fillStyle='#444';
+      ctx.fillText('Current vs Projected monthly', padding, 18);
+
+      data.forEach((d,i)=>{
+        const x = padding + i * ((w - padding*2)/data.length) + 6;
+        const hBefore = (d.before / maxVal) * (h - padding*2 - 20);
+        const hAfter = (d.after / maxVal) * (h - padding*2 - 20);
+        // before bar
+        ctx.fillStyle = 'rgba(123,224,255,0.9)';
+        ctx.fillRect(x, h - padding - hBefore, barW/2 - 4, hBefore);
+        // after bar
+        ctx.fillStyle = 'rgba(255,122,182,0.94)';
+        ctx.fillRect(x + barW/2 + 0, h - padding - hAfter, barW/2 - 4, hAfter);
+        // label
+        ctx.fillStyle='#333'; ctx.textAlign='center';
+        ctx.fillText(d.label, x + barW/2 - 2, h - padding + 14);
+      });
+
+      // legend
+      ctx.textAlign='left'; ctx.fillStyle='#333';
+      ctx.fillRect(w-170,12,12,12); ctx.fillStyle='rgba(123,224,255,0.9)'; ctx.fillRect(w-170,12,12,12);
+      ctx.fillStyle='#333'; ctx.fillText('Current', w-150, 22);
+      ctx.fillStyle='rgba(255,122,182,0.94)'; ctx.fillRect(w-85,12,12,12);
+      ctx.fillStyle='#333'; ctx.fillText('Projected', w-60, 22);
+    }
+
+    // Compute and update UI
+    function compute(){
+      const globalIncrease = parseFloat($('#global-increase').value) || 0;
+      const income = parseFloat($('#income').value) || 0;
+      const perceptionVal = parseInt($('#perception').value)||0;
+
+      const rows = items.map(it=>{
+        const inc = it.override === null ? globalIncrease : it.override;
+        const newAmt = it.amount * (1 + (inc/100));
+        return {label: it.name, before: it.amount, after: round(newAmt,2), inc};
+      });
+
+      const totalBefore = rows.reduce((s,r)=>s + r.before,0);
+      const totalAfter = rows.reduce((s,r)=>s + r.after,0);
+      const diff = round(totalAfter - totalBefore,2);
+
+      $('#total-current').textContent = formatMoney(totalBefore);
+      $('#total-new').textContent = formatMoney(totalAfter);
+      $('#total-diff').textContent = formatMoney(diff);
+      $('#pct-income').textContent = income>0? (round((diff/income)*100,2) + '%') : '—';
+
+      // breakdown
+      const bd = $('#breakdown'); bd.innerHTML = '';
+      rows.slice(0,6).forEach(r=>{ // show up to 6 items neatly
+        const el = document.createElement('div'); el.className='row';
+        el.innerHTML = `<div style="font-weight:600">${escapeHtml(r.label)}</div><div class="small">${formatMoney(r.before)} → ${formatMoney(r.after)}</div>`;
+        bd.appendChild(el);
+      });
+
+      // visualization
+      drawChart(rows.slice(0,8));
+
+      // perception message (a little heuristic)
+      const perceived = perceptionVal/100; // 0..1
+      const perceivedImpact = diff * (0.4 + perceived*0.8); // arbitrary weight
+      const msg = generateMessage(perceivedImpact, diff);
+
+      // show a toast-like highlight
+      showTransientMessage(msg);
+    }
+
+    function generateMessage(perceivedImpact, actualDiff){
+      if(actualDiff <= 1) return `Small immediate impact: extra ${formatMoney(actualDiff)} / month.`;
+      if(perceivedImpact > 100) return `You're likely to feel this: about ${formatMoney(actualDiff)} more per month — consider trimming discretionary spend.`;
+      if(perceivedImpact > 30) return `Noticeable: extra ${formatMoney(actualDiff)} monthly. Try swapping one or two items to cheaper alternatives.`;
+      return `Moderate: extra ${formatMoney(actualDiff)} monthly. Track 1-2 categories closely.`;
+    }
+
+    function showTransientMessage(text){
+      // simple highlight under summary
+      const s = document.getElementById('summary');
+      const el = document.createElement('div'); el.style.padding='10px'; el.style.borderRadius='10px'; el.style.background='linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7))'; el.style.boxShadow='0 6px 20px rgba(0,0,0,0.05)'; el.style.marginTop='6px'; el.innerHTML = `<strong>Insight</strong> — <span style='color:#444'>${escapeHtml(text)}</span>`;
+      // remove old
+      const old = document.querySelector('#summary .insight'); if(old) old.remove(); el.classList.add('insight'); s.appendChild(el);
+      setTimeout(()=>{el.style.transition='opacity 450ms'; el.style.opacity='0'; setTimeout(()=>el.remove(),600)},4000);
+    }
+
+    function formatMoney(n){
+      return '$' + n.toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:2});
+    }
+    function round(v,d=2){return Math.round(v*(10**d))/(10**d)}
+
+    // initial compute
+    compute();
+
+    // accessibility: allow enter on inputs to calculate
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ compute(); }});
+  </script>
+</body>
+</html>
